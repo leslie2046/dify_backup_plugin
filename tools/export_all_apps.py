@@ -197,7 +197,8 @@ class ExportAllAppsTool(Tool):
             logger.info(f"总共获取到 {len(all_apps)} 个应用")
             
             # Export each application
-            exported_count = 0
+            exported_dsl_count = 0  # DSL文件计数
+            successful_app_ids = set() # 成功导出的应用ID集合
             failed_apps = []
             exported_apps = []  # 用于存储成功导出的应用信息
             
@@ -340,7 +341,8 @@ class ExportAllAppsTool(Tool):
                                         "dsl": dsl_dict
                                     })
                                     
-                                    exported_count += 1
+                                    exported_dsl_count += 1
+                                    successful_app_ids.add(app_id)
                                     logger.info(f"已生成文件: {filename}")
                             else:
                                 error_msg = f"{app_name}-{wf_version} (状态码: {export_response.status_code})"
@@ -355,28 +357,33 @@ class ExportAllAppsTool(Tool):
 
             # 返回 JSON 消息（包含所有应用的 DSL）
             json_result = {
-                "total": exported_count,
+                "total_apps": len(successful_app_ids),
+                "total_files": exported_dsl_count,
                 "failed": len(failed_apps),
                 "apps": exported_apps
             }
             yield self.create_json_message(json_result)
             
             # 返回摘要信息
-            logger.info(f"导出完成，成功 {exported_count} 个，失败 {len(failed_apps)} 个")
+            summary_text = f"成功导出 {len(successful_app_ids)} 个应用，{exported_dsl_count} 个 DSL 文件"
+            logger.info(f"导出完成: {summary_text}")
             
-            summary_text = f"导出完成！\n\n"
-            summary_text += f"✅ 成功导出: {exported_count} 个应用\n"
-            if failed_apps:
-                summary_text += f"❌ 失败: {len(failed_apps)} 个应用\n"
-                summary_text += "\n失败列表:\n"
-                for failed in failed_apps:
-                    summary_text += f"  - {failed}\n"
-            
-            yield self.create_text_message(summary_text)
+            if exported_dsl_count > 0:
+                summary = f"应用导出成功\n\n- {summary_text}\n"
+                
+                if failed_apps:
+                    summary += f"- 失败版本数: {len(failed_apps)}\n"
+                    # 最多显示前5个失败信息
+                    for fail in failed_apps[:5]:
+                        summary += f"  - {fail}\n"
+                    if len(failed_apps) > 5:
+                        summary += f"  - ... 等共 {len(failed_apps)} 个错误\n"
+                    
+                yield self.create_text_message(summary)
+            else:
+                yield self.create_text_message(f"未导出任何应用。错误数: {len(failed_apps)}")
 
         except requests.exceptions.RequestException as e:
             yield self.create_text_message(f"Network error: {str(e)}")
         except Exception as e:
             yield self.create_text_message(f"Error during export: {str(e)}")
-
-
