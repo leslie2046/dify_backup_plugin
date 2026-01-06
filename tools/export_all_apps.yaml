@@ -1,0 +1,67 @@
+identity:
+  name: export_all_apps
+  author: leslie2046
+  label:
+    en_US: Export All Apps
+    zh_Hans: 导出所有应用
+description:
+  human:
+    en_US: Export DSL configurations for all applications in the workspace. Supports filtering by app type.
+    zh_Hans: 导出工作空间中所有应用的 DSL 配置。支持按应用类型过滤。
+  llm: A tool for exporting DSL configurations of all Dify applications. Supports filtering by app type (workflow, chat, agent-chat, completion). Returns full DSL content for each app.
+
+extra:
+  python:
+    source: tools/export_all_apps.py
+
+parameters:
+  - name: app_mode
+    type: select
+    required: false
+    label:
+      en_US: App Type Filter
+      zh_Hans: 应用类型过滤
+    human_description:
+      en_US: Filter applications by type. Leave as 'all' to export all types.
+      zh_Hans: 按类型过滤应用。选择 'all' 则导出所有类型。
+    llm_description: Filter applications by type. Options are 'all', 'workflow', 'advanced-chat', 'chat', 'agent-chat', or 'completion'.
+    form: form
+    default: all
+    options:
+      - value: all
+        label:
+          en_US: All Types
+          zh_Hans: 所有类型
+      - value: workflow
+        label:
+          en_US: Workflow
+          zh_Hans: 工作流
+      - value: advanced-chat
+        label:
+          en_US: Advanced Chat
+          zh_Hans: 高级聊天
+      - value: chat
+        label:
+          en_US: Chat
+          zh_Hans: 聊天
+      - value: agent-chat
+        label:
+          en_US: Agent Chat
+          zh_Hans: Agent 聊天
+      - value: completion
+        label:
+          en_US: Completion
+          zh_Hans: 文本补全
+
+  - name: include_secret
+    type: boolean
+    required: false
+    label:
+      en_US: Include Secrets
+      zh_Hans: 包含密钥
+    human_description:
+      en_US: Whether to include sensitive information like API keys in the export. WARNING - Use with caution!
+      zh_Hans: 是否在导出中包含 API 密钥等敏感信息。警告 - 请谨慎使用！
+    llm_description: Set to true to include sensitive information like API keys and credentials in the export. Default is false for security.
+    form: form
+    default: false

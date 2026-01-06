@@ -1,0 +1,41 @@
+identity:
+  name: export_app
+  author: leslie2046
+  label:
+    en_US: Export Single App
+    zh_Hans: 导出单个应用
+description:
+  human:
+    en_US: Export DSL configuration for a specific application by ID or name.
+    zh_Hans: 通过 ID 或名称导出指定应用的 DSL 配置。
+  llm: A tool for exporting DSL configuration of a specific Dify application. You can specify the app by its ID (UUID) or name. Returns full DSL content.
+
+extra:
+  python:
+    source: tools/export_app.py
+
+parameters:
+  - name: app_identifier
+    type: string
+    required: true
+    label:
+      en_US: App ID or Name
+      zh_Hans: 应用 ID 或名称
+    human_description:
+      en_US: Application ID (UUID format) or application name to export.
+      zh_Hans: 要导出的应用 ID（UUID 格式）或应用名称。
+    llm_description: The application ID (UUID) or application name. If using name and multiple apps have the same name, the first match will be used.
+    form: llm
+
+  - name: include_secret
+    type: boolean
+    required: false
+    label:
+      en_US: Include Secrets
+      zh_Hans: 包含密钥
+    human_description:
+      en_US: Whether to include sensitive information like API keys in the export. WARNING - Use with caution!
+      zh_Hans: 是否在导出中包含 API 密钥等敏感信息。警告 - 请谨慎使用！
+    llm_description: Set to true to include sensitive information like API keys and credentials in the export. Default is false for security.
+    form: form
+    default: false

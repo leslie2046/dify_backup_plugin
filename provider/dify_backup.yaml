@@ -1,0 +1,60 @@
+credentials_for_provider:
+  dify_base_url:
+    type: text-input
+    required: true
+    label:
+      en_US: Dify Instance URL
+      zh_Hans: Dify 实例 URL
+    placeholder:
+      en_US: https://cloud.dify.ai or http://localhost
+      zh_Hans: https://cloud.dify.ai 或 http://localhost
+    help:
+      en_US: The base URL of your Dify instance (without /console or /api)
+      zh_Hans: 你的 Dify 实例的基础 URL（不包含 /console 或 /api）
+  
+  email:
+    type: text-input
+    required: true
+    label:
+      en_US: Email
+      zh_Hans: 邮箱
+    placeholder:
+      en_US: your@email.com
+      zh_Hans: your@email.com
+    help:
+      en_US: Your Dify account email
+      zh_Hans: 你的 Dify 账号邮箱
+  
+  password:
+    type: secret-input
+    required: true
+    label:
+      en_US: Password
+      zh_Hans: 密码
+    placeholder:
+      en_US: Your password
+      zh_Hans: 你的密码
+    help:
+      en_US: Your Dify account password
+      zh_Hans: 你的 Dify 账号密码
+
+extra:
+  python:
+    source: provider/dify_backup.py
+
+identity:
+  author: leslie2046
+  name: dify_backup
+  label:
+    en_US: Dify Backup
+    zh_Hans: Dify 备份
+  description:
+    en_US: Tools for backing up and exporting Dify applications. Export DSL configurations for all apps or individual apps with support for draft and published versions.
+    zh_Hans: 用于备份和导出 Dify 应用的工具。支持导出所有应用或单个应用的 DSL 配置，包括草稿版本和已发布版本。
+  icon: icon.svg
+  tags:
+    - utilities
+
+tools:
+  - tools/export_all_apps.yaml
+  - tools/export_app.yaml

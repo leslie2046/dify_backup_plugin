@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <!-- Background circle -->
+  <circle cx="32" cy="32" r="30" fill="#3B82F6" opacity="0.1"/>
+  
+  <!-- Database/Server icon -->
+  <ellipse cx="32" cy="20" rx="16" ry="6" fill="none" stroke="#3B82F6" stroke-width="2.5"/>
+  <path d="M 16 20 L 16 32 Q 16 38 32 38 Q 48 38 48 32 L 48 20" fill="none" stroke="#3B82F6" stroke-width="2.5"/>
+  <ellipse cx="32" cy="32" rx="16" ry="6" fill="none" stroke="#3B82F6" stroke-width="2.5"/>
+  
+  <!-- Export arrow -->
+  <g transform="translate(32, 44)">
+    <!-- Arrow shaft -->
+    <line x1="0" y1="-6" x2="0" y2="10" stroke="#3B82F6" stroke-width="2.5" stroke-linecap="round"/>
+    <!-- Arrow head -->
+    <polyline points="-5,5 0,10 5,5" fill="none" stroke="#3B82F6" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+  
+  <!-- Small document icon at bottom -->
+  <g transform="translate(38, 48)">
+    <rect x="0" y="0" width="10" height="12" rx="1" fill="#3B82F6"/>
+    <line x1="2" y1="3" x2="8" y2="3" stroke="white" stroke-width="1"/>
+    <line x1="2" y1="6" x2="8" y2="6" stroke="white" stroke-width="1"/>
+    <line x1="2" y1="9" x2="6" y2="9" stroke="white" stroke-width="1"/>
+  </g>
+</svg>
