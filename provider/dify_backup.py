@@ -92,11 +92,25 @@ class DifyBackupProvider(ToolProvider):
                 access_token = data.get("access_token")
                 logger.info(f"从 data['access_token'] 获取到的 token: {access_token}")
             
-            # Method 3: Check cookies
+            # Method 3: Check cookies (支持多种可能的cookie名称)
             if not access_token:
                 logger.info("方法3: 检查 cookies")
-                access_token = response.cookies.get("access_token") or response.cookies.get("console_token")
-                logger.info(f"从 cookies 获取到的 token: {access_token}")
+                # 尝试多种可能的cookie名称
+                cookie_names = [
+                    "__Host-access_token",  # 带__Host-前缀的安全cookie
+                    "access_token",          # 标准名称
+                    "console_token",         # 旧版名称
+                ]
+                for cookie_name in cookie_names:
+                    access_token = response.cookies.get(cookie_name)
+                    if access_token:
+                        logger.info(f"从 cookies['{cookie_name}'] 获取到的 token: {access_token[:20]}...")
+                        break
+                    else:
+                        logger.info(f"cookies['{cookie_name}'] 不存在")
+                
+                if not access_token:
+                    logger.info(f"cookies 中所有可用的键: {list(response.cookies.keys())}")
             
             if not access_token:
                 logger.error("所有方法均未能获取到 access_token")

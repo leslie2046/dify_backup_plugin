@@ -53,15 +53,28 @@ parameters:
           en_US: Completion
           zh_Hans: 文本补全
 
-  - name: include_secret
-    type: boolean
+  - name: version_type
+    type: select
     required: false
     label:
-      en_US: Include Secrets
-      zh_Hans: 包含密钥
+      en_US: Version Type
+      zh_Hans: 版本类型
     human_description:
-      en_US: Whether to include sensitive information like API keys in the export. WARNING - Use with caution!
-      zh_Hans: 是否在导出中包含 API 密钥等敏感信息。警告 - 请谨慎使用！
-    llm_description: Set to true to include sensitive information like API keys and credentials in the export. Default is false for security.
+      en_US: Choose whether to export the draft version or published version for each app.
+      zh_Hans: 选择导出每个应用的草稿版本还是已发布版本。
+    llm_description: Choose 'draft' to export the current draft version, 'published' to export the last published version for each app, or 'all' to export both versions. Default is 'draft'.
     form: form
-    default: false
+    default: draft
+    options:
+      - value: all
+        label:
+          en_US: All Versions
+          zh_Hans: 所有版本
+      - value: draft
+        label:
+          en_US: Draft Version
+          zh_Hans: 草稿版本
+      - value: published
+        label:
+          en_US: Published Version
+          zh_Hans: 已发布版本
