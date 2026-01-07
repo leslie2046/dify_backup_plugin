@@ -1,151 +1,285 @@
 # Dify Backup Plugin
 
-A Dify official plugin for backing up and exporting application DSL configurations.
+**Author:** [leslie2046](https://github.com/leslie2046/dify_backup_plugin)  
+**Version:** 0.0.1  
+**Type:** tool
 
-## Features
+<p align="center">
+  <img src="_assets/icon.svg" alt="Dify Backup Logo" width="120" height="120">
+</p>
 
-- **Export All Apps**: Batch export all applications in your workspace
-- **Export Single App**: Export a specific application by ID or name
-- **Flexible Filtering**: Filter apps by type (workflow, chat, agent-chat, etc.)
-- **Security Options**: Choose whether to include secrets in exports
-- **Multiple Output Formats**: Summary, full DSL content, or JSON with metadata
+<p align="center">
+  <strong>🔄 备份和导出 Dify 应用的强大插件工具</strong>
+</p>
 
-## Installation
+<p align="center">
+  <a href="#功能特性">功能特性</a> •
+  <a href="#快速开始">快速开始</a> •
+  <a href="#工具说明">工具说明</a> •
+  <a href="#使用场景">使用场景</a> •
+  <a href="#常见问题">常见问题</a>
+</p>
 
-1. Install the plugin in your Dify instance
-2. Configure the plugin with your Dify API credentials
+---
 
-## Tools
+## ✨ 功能特性
 
-### 1. Export All Apps
+- **🗂️ 批量导出** - 一键导出工作空间中的所有应用
+- **📦 单应用导出** - 通过下拉选择器精准导出指定应用
+- **🔀 版本选择** - 支持导出草稿版本、已发布版本或全部版本
+- **🏷️ 类型过滤** - 按应用类型筛选（Workflow、Chat、Agent 等）
+- **📝 JSON 流式输出** - 逐个返回应用 DSL，适合大批量导出
+- **🔐 账号登录认证** - 使用 Dify 账号密码安全登录
 
-Export DSL configurations for all applications in your workspace.
+## 📋 前置要求
 
-**Parameters:**
-- `dify_api_base_url` (required): Your Dify API base URL (e.g., `https://api.dify.ai`)
-- `api_key` (required): Your Dify Console API key
-- `app_mode` (optional): Filter by app type (all, workflow, chat, etc.)
-- `include_secret` (optional): Include secrets in export (default: false)
-- `output_format` (optional): Output format - summary or full (default: summary)
+- **Dify 版本**: >= 1.7.0
+- **Python 版本**: 3.12+
+- **Dify 账号**: 需要有权限访问目标工作空间的账号
 
-**Example Usage:**
+## 🚀 快速开始
+
+### 1. 安装插件
+
+在 Dify 插件市场中搜索 **"Dify Backup"** 并安装，或手动上传插件包。
+
+### 2. 配置凭证
+
+在插件设置中填写以下信息：
+
+| 参数 | 说明 | 示例 |
+|------|------|------|
+| **Dify Instance URL** | Dify 实例的基础 URL | `https://cloud.dify.ai` 或 `http://localhost` |
+| **Email** | Dify 账号邮箱 | `admin@example.com` |
+| **Password** | Dify 账号密码 | `your-password` |
+
+> ⚠️ **注意**: URL 不需要包含 `/console` 或 `/api` 后缀
+
+### 3. 开始使用
+
+配置完成后，即可在工作流或对话中调用导出工具。
+
+---
+
+## 🛠️ 工具说明
+
+### Export All Apps（导出所有应用）
+
+批量导出工作空间中所有应用的 DSL 配置。
+
+#### 参数
+
+| 参数名 | 类型 | 必填 | 默认值 | 说明 |
+|--------|------|------|--------|------|
+| `app_mode` | select | ❌ | `all` | 应用类型过滤 |
+| `version_type` | select | ❌ | `draft` | 导出版本类型 |
+
+#### 应用类型选项
+
+- `all` - 所有类型
+- `workflow` - 工作流
+- `advanced-chat` - 高级聊天
+- `chat` - 聊天
+- `agent-chat` - Agent 聊天
+- `completion` - 文本补全
+
+#### 版本类型选项
+
+- `draft` - 仅草稿版本
+- `published` - 仅已发布版本
+- `all` - 所有版本（草稿 + 已发布）
+
+#### 输出格式
+
+工具会以 **流式 JSON** 的形式逐个返回每个应用的导出结果：
+
+```json
+{
+  "id": "app-uuid",
+  "name": "应用名称",
+  "mode": "workflow",
+  "version": "draft",
+  "filename": "应用名称-draft.yml",
+  "dsl": { ... }
+}
 ```
-"Export all workflow applications"
-"Export all apps and show me a summary"
-```
 
-### 2. Export App
-
-Export DSL configuration for a specific application.
-
-**Parameters:**
-- `dify_api_base_url` (required): Your Dify API base URL
-- `api_key` (required): Your Dify Console API key
-- `app_identifier` (required): App ID (UUID) or app name
-- `include_secret` (optional): Include secrets in export (default: false)
-- `return_format` (optional): Return format - yaml or json (default: yaml)
-
-**Example Usage:**
-```
-"Export the app named 'My Workflow'"
-"Export app with ID cf7d7b5b-ae04-476a-886d-6a5282fac8ef"
-```
-
-## Authentication
-
-This plugin uses Dify Console API for authentication. You need to provide:
-
-1. **API Base URL**: The base URL of your Dify instance
-   - Cloud: `https://api.dify.ai`
-   - Self-hosted: `http://your-domain/api` or `http://localhost/api`
-
-2. **API Key**: Your Dify Console API key (JWT token)
-   - Obtain from Dify Console → Settings → API Keys
-   - Or use your login JWT token
-
-## Security Notes
-
-⚠️ **Important:**
-- By default, secrets are NOT included in exports (`include_secret=false`)
-- Only enable `include_secret=true` if you need to export sensitive information
-- Keep your API keys secure and never share them publicly
-- Exported configurations may contain sensitive data - handle with care
-
-## Use Cases
-
-### Automated Backup
-
-Create a workflow with a scheduled trigger to automatically backup all apps:
-
-1. Add a Schedule Trigger node (e.g., daily at 2 AM)
-2. Add "Export All Apps" tool node
-3. Configure parameters:
-   - `app_mode`: all
-   - `include_secret`: false
-   - `output_format`: summary
-4. Add notification or storage nodes as needed
-
-### Version Control
-
-Export apps before making changes to track versions:
+最后返回导出摘要：
 
 ```
-User: "Export 'My Workflow' app before I make changes"
-Agent: [Calls Export App tool]
-Agent: "Exported successfully. You can now make changes safely."
+✅ 批量导出完成
+
+成功应用数: 10
+总文件数: 15
+
+❌ 部分应用处理失败:
+- 应用A: 错误信息
 ```
 
-### Migration Preparation
+---
 
-Export all apps when preparing to migrate to a new environment:
+### Export Single App（导出单个应用）
+
+导出指定应用的 DSL 配置。
+
+#### 参数
+
+| 参数名 | 类型 | 必填 | 默认值 | 说明 |
+|--------|------|------|--------|------|
+| `app_identifier` | app-selector | ✅ | - | 从下拉列表选择应用 |
+| `version_type` | select | ❌ | `draft` | 导出版本类型 |
+
+#### 输出格式
+
+与批量导出相同，以 JSON 格式返回应用的 DSL 配置。
+
+---
+
+## 💡 使用场景
+
+### 🔄 定时自动备份
+
+创建定时触发的工作流，自动备份所有应用：
 
 ```
-User: "Export all my applications for migration"
-Agent: [Calls Export All Apps tool with output_format=full]
-Agent: "Exported 10 applications. Ready for migration."
+┌─────────────┐    ┌──────────────────┐    ┌─────────────┐
+│ 定时触发器   │───▶│ Export All Apps  │───▶│ 存储/通知   │
+│ (每天 2:00)  │    │                  │    │             │
+└─────────────┘    └──────────────────┘    └─────────────┘
 ```
 
-## Troubleshooting
+**配置建议**：
+- `version_type`: `all`（同时备份草稿和已发布版本）
+- `app_mode`: `all`（备份所有类型应用）
 
-### Authentication Errors
+### 📋 版本归档
 
-- Verify your API key is correct
-- Check that the API base URL is accessible
-- Ensure your API key has necessary permissions
+在发布新版本前，导出当前已发布版本作为归档：
 
-### App Not Found
+```
+用户: "导出 '客服机器人' 的已发布版本"
+工具: [调用 Export Single App, version_type=published]
+结果: 返回已发布版本的完整 DSL
+```
 
-- Verify the app ID or name is correct
-- Check that the app exists in your workspace
-- Ensure you have access to the app
+### 🚚 环境迁移
 
-### Network Errors
+将应用从开发环境迁移到生产环境：
 
-- Check your network connection
-- Verify the Dify instance is accessible
-- Check firewall settings if using self-hosted Dify
+1. 在开发环境导出所有应用
+2. 在生产环境使用导入功能恢复
 
-## API Endpoints Used
+```
+用户: "导出所有工作流应用，准备迁移到生产环境"
+工具: [调用 Export All Apps, app_mode=workflow, version_type=published]
+结果: 返回所有工作流应用的 DSL 配置
+```
 
-This plugin calls the following Dify Console APIs:
+### 🔍 配置审计
 
-- `GET /console/api/apps` - List applications
-- `GET /console/api/apps/{app_id}` - Get app details
-- `GET /console/api/apps/{app_id}/export` - Export app DSL
+定期导出应用配置用于审计和对比：
 
-## Version
+```
+用户: "导出所有 Agent 应用的草稿版本"
+工具: [调用 Export All Apps, app_mode=agent-chat, version_type=draft]
+结果: 返回所有 Agent 应用的草稿配置
+```
 
-- **Version**: 1.0.0
-- **Minimum Dify Version**: 1.7.0
-- **Author**: langgenius
+---
 
-## License
+## 🔧 技术细节
 
-Apache License 2.0
+### API 端点
 
-## Support
+插件使用以下 Dify Console API：
 
-For issues or questions:
-- Check the troubleshooting section above
-- Review Dify documentation
-- Submit an issue to the dify-official-plugins repository
+| 端点 | 说明 |
+|------|------|
+| `POST /console/api/login` | 账号登录认证 |
+| `GET /console/api/apps` | 获取应用列表 |
+| `GET /console/api/apps/{app_id}` | 获取应用详情 |
+| `GET /console/api/apps/{app_id}/workflows` | 获取应用版本列表 |
+| `GET /console/api/apps/{app_id}/export` | 导出应用 DSL |
+
+### 超时配置
+
+所有 API 请求的默认超时时间为 **60 秒**，可满足大多数网络环境需求。
+
+### 版本命名规则
+
+导出文件名格式：`{应用名称}-{版本标识}.yml`
+
+- 草稿版本：`我的应用-draft.yml`
+- 已发布版本（有标记名）：`我的应用-生产版本.yml`
+- 已发布版本（无标记名）：`我的应用-未命名-202601071000.yml`
+
+---
+
+## ❓ 常见问题
+
+### 认证失败
+
+**症状**: 提示登录失败或凭证无效
+
+**排查步骤**:
+1. ✅ 确认邮箱和密码正确
+2. ✅ 确认 Dify 实例 URL 可访问
+3. ✅ 检查账号是否有权限访问目标工作空间
+4. ✅ 如使用私有部署，确认防火墙允许访问
+
+### 导出超时
+
+**症状**: 提示 `Read timed out`
+
+**解决方案**:
+1. 检查网络连接稳定性
+2. 如果应用数量较多，可分批导出
+3. 确认 Dify 服务器响应正常
+
+### 找不到已发布版本
+
+**症状**: 导出已发布版本时返回空
+
+**说明**: 
+- 部分应用类型（如 Chat）可能不支持版本管理
+- 新创建的应用可能还没有发布过版本
+- 插件会自动尝试降级获取当前版本
+
+### 部分应用导出失败
+
+**症状**: 摘要中显示部分应用处理失败
+
+**可能原因**:
+- 应用正在编辑中
+- 应用权限不足
+- 应用配置损坏
+
+**建议**: 查看错误信息，单独处理失败的应用
+
+---
+
+## 📄 版本信息
+
+| 项目 | 版本 |
+|------|------|
+| **插件版本** | 0.0.1 |
+| **最低 Dify 版本** | 1.7.0 |
+| **作者** | leslie2046 |
+| **许可证** | Apache License 2.0 |
+
+---
+
+## 🤝 贡献与支持
+
+如有问题或建议：
+
+1. 📖 查阅本文档的常见问题部分
+2. 📚 参考 [Dify 官方文档](https://docs.dify.ai)
+3. 🐛 提交 Issue 到本仓库
+4. 💬 加入 Dify 社区讨论
+
+---
+
+<p align="center">
+  Made with ❤️ for the Dify Community
+</p>

@@ -17,10 +17,14 @@ class DifyClient:
     Dify API Client - 封装所有与 Dify Console API 的交互
     """
     
-    def __init__(self, base_url: str, email: str, password: str):
+    # 默认超时时间（秒）
+    DEFAULT_TIMEOUT = 60
+    
+    def __init__(self, base_url: str, email: str, password: str, timeout: int = None):
         self.base_url = base_url.rstrip("/")
         self.email = email
         self.password = password
+        self.timeout = timeout or self.DEFAULT_TIMEOUT
         self.session = requests.Session()
         self.access_token = None
         self.csrf_token = None
@@ -39,7 +43,7 @@ class DifyClient:
                 login_url,
                 json={"email": self.email, "password": password_base64, "remember_me": True},
                 headers={"Content-Type": "application/json"},
-                timeout=10,
+                timeout=self.timeout,
             )
 
             if login_response.status_code != 200:
@@ -93,7 +97,7 @@ class DifyClient:
 
     def get_app_info(self, app_id: str) -> dict:
         """获取应用基本信息"""
-        response = self.session.get(f"{self.base_url}/console/api/apps/{app_id}", timeout=30)
+        response = self.session.get(f"{self.base_url}/console/api/apps/{app_id}", timeout=self.timeout)
         if response.status_code == 200:
             return response.json()
         return None
@@ -106,7 +110,7 @@ class DifyClient:
             response = self.session.get(
                 f"{self.base_url}/console/api/apps",
                 params={"page": page, "limit": limit},
-                timeout=30
+                timeout=self.timeout
             )
             if response.status_code != 200:
                 logger.error(f"Failed to fetch apps page {page}: {response.status_code}")
@@ -145,7 +149,7 @@ class DifyClient:
         response = self.session.get(
             f"{self.base_url}/console/api/apps/{app_id}/workflows",
             params={"page": 1, "limit": 100},
-            timeout=30
+            timeout=self.timeout
         )
 
         if response.status_code == 200:
@@ -216,7 +220,7 @@ class DifyClient:
         response = self.session.get(
             f"{self.base_url}/console/api/apps/{app_id}/export",
             params=params,
-            timeout=60
+            timeout=self.timeout
         )
         
         if response.status_code == 200:
