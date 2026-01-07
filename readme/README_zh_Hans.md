@@ -21,43 +21,103 @@
 
 ## 🚀 快速开始
 
-### 配置凭证
+### 1. 安装插件
 
-| 参数 | 说明 |
-|------|------|
-| Dify Instance URL | Dify 实例地址（如 `https://cloud.dify.ai`） |
-| Email | 账号邮箱 |
-| Password | 账号密码 |
+在 Dify 插件市场中搜索 **"Dify Backup"** 并安装，或手动上传插件包。
 
-### 工具参数
+### 2. 配置凭证
 
-**Export All Apps**
+| 参数 | 说明 | 示例 |
+|------|------|------|
+| Dify Instance URL | Dify 实例基础 URL | `https://cloud.dify.ai` |
+| Email | 账号邮箱 | `admin@example.com` |
+| Password | 账号密码 | - |
 
-| 参数 | 默认值 | 选项 |
-|------|--------|------|
-| `app_mode` | all | all / workflow / chat / agent-chat / completion |
-| `version_type` | draft | draft / published / all |
+> ⚠️ URL 不需要包含 `/console` 或 `/api` 后缀
 
-**Export Single App**
+### 3. 开始使用
 
-| 参数 | 说明 |
-|------|------|
-| `app_identifier` | 从下拉列表选择应用 |
-| `version_type` | draft / published / all |
+配置完成后，即可在工作流或对话中调用导出工具。
+
+---
+
+## 🛠️ 工具说明
+
+### Export All Apps（导出所有应用）
+
+批量导出工作空间中所有应用的 DSL 配置。
+
+| 参数 | 类型 | 必填 | 说明 |
+|------|------|------|------|
+| `app_mode` | select | ✅ | 应用类型：all / workflow / chat / agent-chat / completion |
+| `version_type` | select | ✅ | 版本类型：draft / published / all |
+
+**输出格式**：流式 JSON，逐个返回每个应用的 DSL
+
+```json
+{
+  "id": "app-uuid",
+  "name": "应用名称",
+  "mode": "workflow",
+  "version": "draft",
+  "filename": "应用名称-draft.yml",
+  "dsl": { ... }
+}
+```
+
+### Export Single App（导出单个应用）
+
+导出指定应用的 DSL 配置。
+
+| 参数 | 类型 | 必填 | 说明 |
+|------|------|------|------|
+| `app_identifier` | app-selector | ✅ | 从下拉列表选择应用 |
+| `version_type` | select | ✅ | 版本类型：draft / published / all |
+
+---
 
 ## 💡 使用场景
 
-| 场景 | 配置建议 |
-|------|----------|
-| 定时备份 | `version_type=all` 同时备份草稿和发布版本 |
-| 环境迁移 | `version_type=published` 仅导出生产版本 |
-| 版本归档 | 发布前导出当前版本作为备份 |
+### 定时自动备份
 
-## 🔧 技术说明
+创建定时触发的工作流，自动备份所有应用：
 
-- **超时设置**: 60 秒
-- **API 认证**: 邮箱密码登录
-- **输出格式**: 流式 JSON，逐个返回应用 DSL
+```
+┌─────────────┐    ┌──────────────────┐    ┌─────────────┐
+│ 定时触发器   │───▶│ Export All Apps  │───▶│ 存储/通知   │
+│ (每天 2:00)  │    │                  │    │             │
+└─────────────┘    └──────────────────┘    └─────────────┘
+```
+
+### 版本归档
+
+发布新版本前，导出当前版本作为归档备份。
+
+### 环境迁移
+
+1. 在开发环境导出所有应用（`version_type=published`）
+2. 在生产环境使用导入功能恢复
+
+---
+
+## 🔧 技术细节
+
+| 项目 | 说明 |
+|------|------|
+| 超时设置 | 60 秒 |
+| API 认证 | 邮箱密码登录 |
+| 输出格式 | 流式 JSON |
+| 文件命名 | `{应用名称}-{版本标识}.yml` |
+
+### API 端点
+
+| 端点 | 说明 |
+|------|------|
+| `POST /console/api/login` | 登录认证 |
+| `GET /console/api/apps` | 获取应用列表 |
+| `GET /console/api/apps/{id}/export` | 导出 DSL |
+
+---
 
 ## ❓ 常见问题
 

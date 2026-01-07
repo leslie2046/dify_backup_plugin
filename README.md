@@ -21,43 +21,103 @@
 
 ## 🚀 Quick Start
 
-### Configure Credentials
+### 1. Install Plugin
 
-| Parameter | Description |
-|-----------|-------------|
-| Dify Instance URL | Dify instance URL (e.g., `https://cloud.dify.ai`) |
-| Email | Account email |
-| Password | Account password |
+Search for **"Dify Backup"** in Dify Plugin Marketplace and install, or upload the plugin package manually.
 
-### Tool Parameters
+### 2. Configure Credentials
 
-**Export All Apps**
+| Parameter | Description | Example |
+|-----------|-------------|---------|
+| Dify Instance URL | Dify instance base URL | `https://cloud.dify.ai` |
+| Email | Account email | `admin@example.com` |
+| Password | Account password | - |
 
-| Parameter | Default | Options |
-|-----------|---------|---------|
-| `app_mode` | all | all / workflow / chat / agent-chat / completion |
-| `version_type` | draft | draft / published / all |
+> ⚠️ URL should not include `/console` or `/api` suffix
 
-**Export Single App**
+### 3. Start Using
 
-| Parameter | Description |
-|-----------|-------------|
-| `app_identifier` | Select app from dropdown |
-| `version_type` | draft / published / all |
+After configuration, you can invoke the export tools in workflows or conversations.
+
+---
+
+## 🛠️ Tools
+
+### Export All Apps
+
+Batch export DSL configurations for all applications in the workspace.
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `app_mode` | select | ✅ | App type: all / workflow / chat / agent-chat / completion |
+| `version_type` | select | ✅ | Version: draft / published / all |
+
+**Output Format**: Streaming JSON, returns DSL for each app
+
+```json
+{
+  "id": "app-uuid",
+  "name": "App Name",
+  "mode": "workflow",
+  "version": "draft",
+  "filename": "AppName-draft.yml",
+  "dsl": { ... }
+}
+```
+
+### Export Single App
+
+Export DSL configuration for a specific application.
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `app_identifier` | app-selector | ✅ | Select app from dropdown |
+| `version_type` | select | ✅ | Version: draft / published / all |
+
+---
 
 ## 💡 Use Cases
 
-| Scenario | Recommended Config |
-|----------|-------------------|
-| Scheduled Backup | `version_type=all` to backup both draft and published |
-| Environment Migration | `version_type=published` for production only |
-| Version Archiving | Export current version before publishing |
+### Scheduled Auto Backup
+
+Create a scheduled workflow to automatically backup all apps:
+
+```
+┌─────────────┐    ┌──────────────────┐    ┌─────────────┐
+│   Schedule  │───▶│ Export All Apps  │───▶│   Storage   │
+│ (Daily 2AM) │    │                  │    │             │
+└─────────────┘    └──────────────────┘    └─────────────┘
+```
+
+### Version Archiving
+
+Export current version as archive before publishing new version.
+
+### Environment Migration
+
+1. Export all apps in dev environment (`version_type=published`)
+2. Import in production environment
+
+---
 
 ## 🔧 Technical Details
 
-- **Timeout**: 60 seconds
-- **Authentication**: Email/password login
-- **Output Format**: Streaming JSON, returns DSL per app
+| Item | Description |
+|------|-------------|
+| Timeout | 60 seconds |
+| Authentication | Email/password login |
+| Output Format | Streaming JSON |
+| File Naming | `{AppName}-{VersionId}.yml` |
+
+### API Endpoints
+
+| Endpoint | Description |
+|----------|-------------|
+| `POST /console/api/login` | Login authentication |
+| `GET /console/api/apps` | List applications |
+| `GET /console/api/apps/{id}/export` | Export DSL |
+
+---
 
 ## ❓ FAQ
 
