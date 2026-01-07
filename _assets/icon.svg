@@ -1,25 +1,21 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
-  <!-- Background circle -->
-  <circle cx="32" cy="32" r="30" fill="#3B82F6" opacity="0.1"/>
-  
-  <!-- Database/Server icon -->
-  <ellipse cx="32" cy="20" rx="16" ry="6" fill="none" stroke="#3B82F6" stroke-width="2.5"/>
-  <path d="M 16 20 L 16 32 Q 16 38 32 38 Q 48 38 48 32 L 48 20" fill="none" stroke="#3B82F6" stroke-width="2.5"/>
-  <ellipse cx="32" cy="32" rx="16" ry="6" fill="none" stroke="#3B82F6" stroke-width="2.5"/>
-  
-  <!-- Export arrow -->
-  <g transform="translate(32, 44)">
-    <!-- Arrow shaft -->
-    <line x1="0" y1="-6" x2="0" y2="10" stroke="#3B82F6" stroke-width="2.5" stroke-linecap="round"/>
-    <!-- Arrow head -->
-    <polyline points="-5,5 0,10 5,5" fill="none" stroke="#3B82F6" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
-  </g>
-  
-  <!-- Small document icon at bottom -->
-  <g transform="translate(38, 48)">
-    <rect x="0" y="0" width="10" height="12" rx="1" fill="#3B82F6"/>
-    <line x1="2" y1="3" x2="8" y2="3" stroke="white" stroke-width="1"/>
-    <line x1="2" y1="6" x2="8" y2="6" stroke="white" stroke-width="1"/>
-    <line x1="2" y1="9" x2="6" y2="9" stroke="white" stroke-width="1"/>
-  </g>
+<svg width="128" height="128" viewBox="0 0 128 128" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+        <linearGradient id="dify_gradient_export" x1="30" y1="20" x2="98" y2="108" gradientUnits="userSpaceOnUse">
+            <stop offset="0%" stop-color="#9D7AF7" /> <stop offset="100%" stop-color="#3B8DF6" /> </linearGradient>
+    </defs>
+
+    <rect x="28" y="24" width="72" height="64" rx="12" stroke="url(#dify_gradient_export)" stroke-width="10" fill="none"/>
+    
+    <g fill="url(#dify_gradient_export)" opacity="0.6">
+        <circle cx="48" cy="48" r="5" />
+        <rect x="64" y="44" width="20" height="8" rx="4" />
+         <circle cx="80" cy="64" r="5" />
+    </g>
+
+    <g filter="drop-shadow(0px 4px 8px rgba(47, 128, 237, 0.3))"> <path d="M64 56 V104 M64 104 L44 84 M64 104 L84 84" stroke="white" stroke-width="14" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M64 56 V104 M64 104 L44 84 M64 104 L84 84" stroke="url(#dify_gradient_export)" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+    </g>
+    
+    <path d="M36 116 H92" stroke="url(#dify_gradient_export)" stroke-width="6" stroke-linecap="round" opacity="0.5"/>
+
 </svg>

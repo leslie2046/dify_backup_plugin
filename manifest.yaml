@@ -3,6 +3,7 @@ created_at: "2026-01-05T12:30:00.000000000Z"
 description:
   en_US: Tools for backing up and exporting Dify applications. Export DSL configurations for all apps or individual apps with support for draft and published versions.
   zh_Hans: 用于备份和导出 Dify 应用的工具。支持导出所有应用或单个应用的 DSL 配置，包括草稿版本和已发布版本。
+privacy: PRIVACY.md
 icon: icon.svg
 label:
   en_US: Dify Backup
@@ -16,7 +17,6 @@ meta:
     language: python
     version: "3.12"
   version: 0.0.1
-  minimum_dify_version: 1.7.0
 name: dify_backup
 plugins:
   tools:

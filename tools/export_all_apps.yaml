@@ -17,7 +17,7 @@ extra:
 parameters:
   - name: app_mode
     type: select
-    required: false
+    required: true
     label:
       en_US: App Type Filter
       zh_Hans: 应用类型过滤
@@ -26,7 +26,6 @@ parameters:
       zh_Hans: 按类型过滤应用。选择 'all' 则导出所有类型。
     llm_description: Filter applications by type. Options are 'all', 'workflow', 'advanced-chat', 'chat', 'agent-chat', or 'completion'.
     form: form
-    default: all
     options:
       - value: all
         label:
@@ -55,7 +54,7 @@ parameters:
 
   - name: version_type
     type: select
-    required: false
+    required: true
     label:
       en_US: Version Type
       zh_Hans: 版本类型
@@ -64,7 +63,6 @@ parameters:
       zh_Hans: 选择导出每个应用的草稿版本还是已发布版本。
     llm_description: Choose 'draft' to export the current draft version, 'published' to export the last published version for each app, or 'all' to export both versions. Default is 'draft'.
     form: form
-    default: draft
     options:
       - value: all
         label:

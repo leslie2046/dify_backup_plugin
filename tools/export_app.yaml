@@ -30,7 +30,7 @@ parameters:
 
   - name: version_type
     type: select
-    required: false
+    required: true
     label:
       en_US: Version Type
       zh_Hans: 版本类型
@@ -39,7 +39,6 @@ parameters:
       zh_Hans: 选择导出草稿版本还是已发布版本。
     llm_description: Choose 'draft' to export the current draft version, 'published' to export the last published version, or 'all' to export both versions. Default is 'draft'.
     form: form
-    default: draft
     options:
       - value: all
         label:
