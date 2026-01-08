@@ -23,6 +23,7 @@ class ExportAllAppsTool(Tool):
         Export all applications DSL configurations using DifyClient
         """
         version_type = tool_parameters.get("version_type", "draft")
+        app_mode = tool_parameters.get("app_mode", "all")
 
         base_url = self.runtime.credentials.get("dify_base_url", "")
         email = self.runtime.credentials.get("email", "")
@@ -37,8 +38,8 @@ class ExportAllAppsTool(Tool):
             client = DifyClient(base_url, email, password)
 
             # 获取所有应用
-            logger.info("开始获取应用列表...")
-            all_apps = client.get_all_apps(limit=100)
+            logger.info(f"开始获取应用列表... (app_mode={app_mode})")
+            all_apps = client.get_all_apps(limit=100, mode=app_mode)
             logger.info(f"获取到 {len(all_apps)} 个应用")
 
             successful_app_ids = set()

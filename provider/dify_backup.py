@@ -102,14 +102,24 @@ class DifyClient:
             return response.json()
         return None
 
-    def get_all_apps(self, limit: int = 100) -> list:
-        """获取所有应用列表"""
+    def get_all_apps(self, limit: int = 100, mode: str = "all") -> list:
+        """获取所有应用列表
+        
+        Args:
+            limit: 每页获取的应用数量
+            mode: 应用类型过滤，可选值: all, workflow, advanced-chat, chat, agent-chat, completion
+        """
         all_apps = []
         page = 1
         while True:
+            params = {"page": page, "limit": limit}
+            # 如果指定了 mode 且不是 all，则添加 mode 参数进行服务端过滤
+            if mode and mode != "all":
+                params["mode"] = mode
+            
             response = self.session.get(
                 f"{self.base_url}/console/api/apps",
-                params={"page": page, "limit": limit},
+                params=params,
                 timeout=self.timeout
             )
             if response.status_code != 200:
@@ -125,6 +135,8 @@ class DifyClient:
             if not data.get("has_more", False):
                 break
             page += 1
+        
+        logger.info(f"Total apps fetched: {len(all_apps)} (mode filter: {mode})")
         return all_apps
 
     def get_versions_to_export(self, app_id: str, app_name: str, version_type: str = "draft") -> list:
