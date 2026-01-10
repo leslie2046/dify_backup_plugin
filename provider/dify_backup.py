@@ -241,6 +241,46 @@ class DifyClient:
             logger.warning(f"Export failed for app {app_id} (wf: {workflow_id}): {response.status_code}")
             return None
 
+    def get_all_annotations(self, app_id: str, limit: int = 100) -> list:
+        """获取指定应用的所有标注
+        
+        Args:
+            app_id: 应用 ID
+            limit: 每页获取的标注数量
+            
+        Returns:
+            标注列表，每个标注包含 question 和 answer 字段
+        """
+        all_annotations = []
+        page = 1
+        
+        while True:
+            response = self.session.get(
+                f"{self.base_url}/console/api/apps/{app_id}/annotations",
+                params={"page": page, "limit": limit},
+                timeout=self.timeout
+            )
+            
+            if response.status_code != 200:
+                logger.warning(f"Failed to fetch annotations for app {app_id}, page {page}: {response.status_code}")
+                break
+            
+            data = response.json()
+            items = data.get("data", [])
+            
+            if not items:
+                break
+            
+            all_annotations.extend(items)
+            
+            # 检查是否还有更多数据
+            if not data.get("has_more", False):
+                break
+            
+            page += 1
+        
+        return all_annotations
+
     @staticmethod
     def generate_filename(app_name: str, version_display_name: str) -> str:
         """生成安全的文件名"""

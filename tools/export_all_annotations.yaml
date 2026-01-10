@@ -1,0 +1,17 @@
+identity:
+  name: export_all_annotations
+  author: leslie2046
+  label:
+    en_US: Export All Annotations
+    zh_Hans: 导出所有应用标注
+description:
+  human:
+    en_US: Export annotations for all applications in the workspace as CSV files. Each app with annotations will be exported as a separate CSV file named "{app_name}-annotations.csv".
+    zh_Hans: 导出工作空间中所有应用的标注为 CSV 文件。每个有标注的应用将导出为单独的 CSV 文件，文件名为「应用名-annotations.csv」。
+  llm: A tool for exporting annotations of all Dify applications. Returns CSV files containing question-answer pairs for each app that has annotations.
+
+extra:
+  python:
+    source: tools/export_all_annotations.py
+
+parameters: []

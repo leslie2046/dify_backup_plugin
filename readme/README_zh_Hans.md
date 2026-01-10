@@ -14,10 +14,11 @@
 
 ## ✨ 功能
 
-- 📦 **批量导出** - 导出工作空间中所有应用
-- 🎯 **单应用导出** - 选择指定应用导出
+- 📦 **批量导出应用** - 导出工作空间中所有应用的 DSL
+- 🎯 **单应用导出** - 选择指定应用导出 DSL
 - 🔀 **版本支持** - 草稿版本 / 已发布版本 / 全部
 - 🏷️ **类型过滤** - Workflow / Chat / Agent 等
+- 📝 **批量导出标注** - 导出所有应用的标注为 CSV
 
 ## 🚀 快速开始
 
@@ -74,6 +75,24 @@
 | `app_identifier` | app-selector | ✅ | 从下拉列表选择应用 |
 | `version_type` | select | ✅ | 版本类型：draft / published / all |
 
+### Export All Annotations（导出所有应用标注）
+
+批量导出工作空间中所有应用的标注（问答对）。
+
+- **无需参数** - 一键导出
+- **智能过滤** - 自动跳过无标注的应用
+- **CSV 格式** - 每个应用导出为 `{应用名}-annotations.csv`
+
+**输出格式**：流式 JSON，逐个返回每个有标注应用的 CSV 内容
+
+```json
+{
+  "name": "应用名称",
+  "filename": "应用名称-annotations.csv",
+  "content": "\"question\",\"answer\"\n\"问题1\",\"回答1\"\n..."
+}
+```
+
 ---
 
 ## 💡 使用场景
@@ -116,6 +135,7 @@
 | `POST /console/api/login` | 登录认证 |
 | `GET /console/api/apps` | 获取应用列表 |
 | `GET /console/api/apps/{id}/export` | 导出 DSL |
+| `GET /console/api/apps/{id}/annotations` | 获取标注 |
 
 ---
 

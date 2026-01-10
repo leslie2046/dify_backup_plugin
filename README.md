@@ -14,10 +14,11 @@
 
 ## ✨ Features
 
-- 📦 **Batch Export** - Export all applications in workspace
-- 🎯 **Single App Export** - Export specific application
+- 📦 **Batch Export Apps** - Export all applications DSL in workspace
+- 🎯 **Single App Export** - Export specific application DSL
 - 🔀 **Version Support** - Draft / Published / All versions
 - 🏷️ **Type Filter** - Workflow / Chat / Agent, etc.
+- 📝 **Batch Export Annotations** - Export annotations for all apps as CSV
 
 ## 🚀 Quick Start
 
@@ -74,6 +75,24 @@ Export DSL configuration for a specific application.
 | `app_identifier` | app-selector | ✅ | Select app from dropdown |
 | `version_type` | select | ✅ | Version: draft / published / all |
 
+### Export All Annotations
+
+Batch export annotations (Q&A pairs) for all applications in the workspace.
+
+- **No parameters required** - One-click export
+- **Smart filtering** - Automatically skips apps with no annotations
+- **CSV format** - Each app exports as `{AppName}-annotations.csv`
+
+**Output Format**: Streaming JSON, returns CSV content for each app with annotations
+
+```json
+{
+  "name": "App Name",
+  "filename": "AppName-annotations.csv",
+  "content": "\"question\",\"answer\"\n\"Q1\",\"A1\"\n..."
+}
+```
+
 ---
 
 ## 💡 Use Cases
@@ -116,6 +135,7 @@ Export current version as archive before publishing new version.
 | `POST /console/api/login` | Login authentication |
 | `GET /console/api/apps` | List applications |
 | `GET /console/api/apps/{id}/export` | Export DSL |
+| `GET /console/api/apps/{id}/annotations` | Get annotations |
 
 ---
 
