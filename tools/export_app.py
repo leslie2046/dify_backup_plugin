@@ -71,11 +71,8 @@ class ExportAppTool(Tool):
                 if dsl_content:
                     filename = client.generate_filename(app_name, ver["display_name"])
                     
-                    # 解析 YAML
-                    try:
-                        dsl_dict = yaml.safe_load(dsl_content) if isinstance(dsl_content, str) else dsl_content
-                    except:
-                        dsl_dict = dsl_content
+                    # 保持原始 YAML 格式
+                    dsl_yaml = dsl_content if isinstance(dsl_content, str) else yaml.dump(dsl_content, allow_unicode=True, default_flow_style=False, sort_keys=False)
                     
                     json_item = {
                         "id": app_id,
@@ -83,7 +80,7 @@ class ExportAppTool(Tool):
                         "mode": app_mode,
                         "version": ver["version"],
                         "filename": filename,
-                        "dsl": dsl_dict
+                        "dsl": dsl_yaml
                     }
                     exported_files.append(json_item)
                     exported_count += 1
