@@ -1,0 +1,41 @@
+identity:
+  name: export_datasets
+  author: leslie2046
+  label:
+    en_US: Export Dataset Files
+    zh_Hans: 导出知识库文件
+description:
+  human:
+    en_US: Export files from one or more knowledge bases (datasets) as ZIP archives. Leave dataset_ids blank to export all datasets. Each dataset is packaged as a separate ZIP file containing the original uploaded documents.
+    zh_Hans: 将一个或多个知识库（数据集）的文件导出为 ZIP 压缩包。dataset_ids 留空则导出所有知识库。每个知识库单独打包为一个 ZIP 文件，包含原始上传的文档文件。
+  llm: A tool for exporting files from Dify knowledge bases. Supports multi-select by providing comma-separated dataset IDs. If dataset_ids is empty, all datasets are exported. Each dataset is packaged as a ZIP file containing the original uploaded documents. Returns ZIP blobs and a structured file list.
+
+extra:
+  python:
+    source: tools/export_datasets.py
+
+parameters:
+  - name: dataset_ids
+    type: string
+    required: false
+    label:
+      en_US: Dataset IDs (comma-separated)
+      zh_Hans: 知识库 ID（逗号分隔，多选）
+    human_description:
+      en_US: "Enter one or more dataset IDs separated by commas. Leave blank to export ALL datasets. Example: id1,id2,id3"
+      zh_Hans: 输入一个或多个知识库 ID，用逗号分隔（多选）。留空则导出所有知识库。
+    llm_description: Comma-separated list of dataset IDs to export. Leave empty to export all datasets.
+    form: llm
+
+  - name: include_segments
+    type: boolean
+    required: false
+    default: false
+    label:
+      en_US: Fallback to Text Segments
+      zh_Hans: 降级为文本分段导出
+    human_description:
+      en_US: If enabled, documents that cannot be downloaded as original files will be exported as plain text using their indexed segments.
+      zh_Hans: 启用后，无法下载原始文件的文档将使用已索引的分段内容导出为纯文本。
+    llm_description: Set to true to export document segments as text when the original file cannot be downloaded.
+    form: form

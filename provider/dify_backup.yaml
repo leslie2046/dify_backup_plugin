@@ -59,3 +59,4 @@ tools:
   - tools/export_all_apps.yaml
   - tools/export_app.yaml
   - tools/export_all_annotations.yaml
+  - tools/export_datasets.yaml

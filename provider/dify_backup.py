@@ -281,6 +281,132 @@ class DifyClient:
         
         return all_annotations
 
+    def get_all_datasets(self, limit: int = 100) -> list:
+        """获取所有知识库列表
+        
+        Returns:
+            知识库列表，每条包含 id, name, description 等字段
+        """
+        all_datasets = []
+        page = 1
+        while True:
+            response = self.session.get(
+                f"{self.base_url}/console/api/datasets",
+                params={"page": page, "limit": limit},
+                timeout=self.timeout
+            )
+            if response.status_code != 200:
+                logger.error(f"Failed to fetch datasets page {page}: {response.status_code}")
+                break
+            
+            data = response.json()
+            items = data.get("data", [])
+            if not items:
+                break
+            
+            all_datasets.extend(items)
+            if not data.get("has_more", False):
+                break
+            page += 1
+        
+        logger.info(f"Total datasets fetched: {len(all_datasets)}")
+        return all_datasets
+
+    def get_dataset_documents(self, dataset_id: str, limit: int = 100) -> list:
+        """获取指定知识库的所有文档
+        
+        Args:
+            dataset_id: 知识库 ID
+            limit: 每页获取的文档数量
+            
+        Returns:
+            文档列表
+        """
+        all_documents = []
+        page = 1
+        while True:
+            response = self.session.get(
+                f"{self.base_url}/console/api/datasets/{dataset_id}/documents",
+                params={"page": page, "limit": limit},
+                timeout=self.timeout
+            )
+            if response.status_code != 200:
+                logger.warning(f"Failed to fetch documents for dataset {dataset_id}, page {page}: {response.status_code}")
+                break
+            
+            data = response.json()
+            items = data.get("data", [])
+            if not items:
+                break
+            
+            all_documents.extend(items)
+            if not data.get("has_more", False):
+                break
+            page += 1
+        
+        return all_documents
+
+    def get_document_segments(self, dataset_id: str, document_id: str, limit: int = 100) -> list:
+        """获取指定文档的所有分段
+        
+        Args:
+            dataset_id: 知识库 ID
+            document_id: 文档 ID
+            limit: 每页获取的分段数量
+            
+        Returns:
+            分段列表
+        """
+        all_segments = []
+        page = 1
+        while True:
+            response = self.session.get(
+                f"{self.base_url}/console/api/datasets/{dataset_id}/documents/{document_id}/segments",
+                params={"page": page, "limit": limit},
+                timeout=self.timeout
+            )
+            if response.status_code != 200:
+                logger.warning(f"Failed to fetch segments for document {document_id}: {response.status_code}")
+                break
+            
+            data = response.json()
+            items = data.get("data", [])
+            if not items:
+                break
+            
+            all_segments.extend(items)
+            if not data.get("has_more", False):
+                break
+            page += 1
+        
+        return all_segments
+
+    def download_upload_file(self, upload_file_id: str) -> tuple[bytes, str]:
+        """下载原始上传文件内容
+
+        Args:
+            upload_file_id: 上传文件的 ID（来自 document data_source_info）
+
+        Returns:
+            (file_bytes, mime_type) 元组，失败时返回 (None, None)
+        """
+        # Dify Console API 文件预览/下载端点
+        url = f"{self.base_url}/console/api/files/{upload_file_id}/file-preview"
+        response = self.session.get(url, timeout=self.timeout)
+        if response.status_code == 200:
+            content_type = response.headers.get("Content-Type", "application/octet-stream")
+            return response.content, content_type
+
+        # 降级：尝试另一个端点路径
+        url2 = f"{self.base_url}/files/{upload_file_id}/file-preview"
+        response2 = self.session.get(url2, timeout=self.timeout)
+        if response2.status_code == 200:
+            content_type = response2.headers.get("Content-Type", "application/octet-stream")
+            return response2.content, content_type
+
+        logger.warning(f"Cannot download file {upload_file_id}: {response.status_code}")
+        return None, None
+
     @staticmethod
     def generate_filename(app_name: str, version_display_name: str) -> str:
         """生成安全的文件名"""
