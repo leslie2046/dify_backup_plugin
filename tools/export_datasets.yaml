@@ -27,15 +27,3 @@ parameters:
     llm_description: Comma-separated list of dataset IDs to export. Leave empty to export all datasets.
     form: llm
 
-  - name: include_segments
-    type: boolean
-    required: false
-    default: false
-    label:
-      en_US: Fallback to Text Segments
-      zh_Hans: 降级为文本分段导出
-    human_description:
-      en_US: If enabled, documents that cannot be downloaded as original files will be exported as plain text using their indexed segments.
-      zh_Hans: 启用后，无法下载原始文件的文档将使用已索引的分段内容导出为纯文本。
-    llm_description: Set to true to export document segments as text when the original file cannot be downloaded.
-    form: form

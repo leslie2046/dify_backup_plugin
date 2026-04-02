@@ -34,10 +34,15 @@ MIME_EXT_MAP = {
 
 def _safe_name(name: str) -> str:
     """将名称转换为文件系统安全的字符串，保留中文"""
-    safe = "".join(
-        c for c in name
-        if c.isalnum() or c in (" ", "-", "_", ".") or "\u4e00" <= c <= "\u9fff"
-    ).strip().replace(" ", "_")
+    safe = (
+        "".join(
+            c
+            for c in name
+            if c.isalnum() or c in (" ", "-", "_", ".") or "\u4e00" <= c <= "\u9fff"
+        )
+        .strip()
+        .replace(" ", "_")
+    )
     return safe or "unknown"
 
 
@@ -53,18 +58,33 @@ def _ext_from_mime(mime: str, original_name: str = "") -> str:
     return MIME_EXT_MAP.get(base_mime, ".bin")
 
 
+def _build_zip_entry_name(original_name: str, mime: str = "") -> str:
+    """生成 ZIP 内文件名，避免重复拼接扩展名。"""
+    safe_name = _safe_name(original_name)
+    ext = _ext_from_mime(mime, original_name)
+
+    if safe_name.lower().endswith(ext.lower()):
+        return safe_name
+
+    if "." in safe_name:
+        safe_name = safe_name.rsplit(".", 1)[0]
+
+    return f"{safe_name}{ext}"
+
+
 class ExportDatasetsTool(Tool):
     """
     Tool for exporting Dify knowledge base (dataset) files as ZIP archives.
     Supports multi-select datasets; defaults to all datasets.
     """
 
-    def _invoke(self, tool_parameters: dict[str, Any]) -> Generator[ToolInvokeMessage, None, None]:
+    def _invoke(
+        self, tool_parameters: dict[str, Any]
+    ) -> Generator[ToolInvokeMessage, None, None]:
         """
         Export selected datasets as ZIP files and return a file list summary.
         """
         dataset_ids_raw = tool_parameters.get("dataset_ids", "").strip()
-        include_segments = tool_parameters.get("include_segments", False)
 
         base_url = self.runtime.credentials.get("dify_base_url", "")
         email = self.runtime.credentials.get("email", "")
@@ -84,7 +104,9 @@ class ExportDatasetsTool(Tool):
             if dataset_ids_raw:
                 # 解析用户指定的 ID 列表（支持逗号 / 换行 / 空格分隔）
                 requested_ids = {
-                    i.strip() for i in re.split(r"[,\n\r\s]+", dataset_ids_raw) if i.strip()
+                    i.strip()
+                    for i in re.split(r"[,\n\r\s]+", dataset_ids_raw)
+                    if i.strip()
                 }
                 selected = [d for d in all_datasets if d.get("id") in requested_ids]
                 not_found = requested_ids - {d.get("id") for d in selected}
@@ -94,7 +116,9 @@ class ExportDatasetsTool(Tool):
                 selected = all_datasets  # 默认全部
 
             if not selected:
-                yield self.create_text_message("⚠️ 未找到任何知识库，请检查 dataset_ids 参数。")
+                yield self.create_text_message(
+                    "⚠️ 未找到任何知识库，请检查 dataset_ids 参数。"
+                )
                 return
 
             logger.info(f"将导出 {len(selected)} 个知识库")
@@ -102,6 +126,7 @@ class ExportDatasetsTool(Tool):
             # ── 2. 逐个知识库打包 ZIP ───────────────────────────────────────
             total_file_count = 0
             failed_datasets = []
+            dataset_results = []
             file_list_lines = []  # 汇总文件清单
 
             for dataset in selected:
@@ -117,13 +142,23 @@ class ExportDatasetsTool(Tool):
 
                     if not documents:
                         file_list_lines.append(f"📂 {dataset_name}（无文档，跳过）")
+                        dataset_results.append(
+                            {
+                                "dataset_id": dataset_id,
+                                "dataset_name": dataset_name,
+                                "status": "no_documents",
+                                "exported_file_count": 0,
+                            }
+                        )
                         continue
 
                     # 在内存中建立 ZIP
                     zip_buf = io.BytesIO()
                     doc_file_list = []
 
-                    with zipfile.ZipFile(zip_buf, mode="w", compression=zipfile.ZIP_DEFLATED) as zf:
+                    with zipfile.ZipFile(
+                        zip_buf, mode="w", compression=zipfile.ZIP_DEFLATED
+                    ) as zf:
                         for doc in documents:
                             doc_id = doc.get("id")
                             doc_name = doc.get("name", "unknown")
@@ -133,43 +168,48 @@ class ExportDatasetsTool(Tool):
                             file_added = False
 
                             # ── 尝试下载原始上传文件 ──
-                            if data_source_type == "upload_file":
-                                upload_file_id = (
-                                    data_source_info.get("upload_file_id")
-                                    or data_source_info.get("upload_file", {}).get("id")
+                            if data_source_type in {"upload_file", "file_upload"}:
+                                file_bytes, mime = client.download_document_file(
+                                    dataset_id, doc_id
                                 )
+                                if file_bytes:
+                                    zip_path = _build_zip_entry_name(
+                                        doc_name, mime or ""
+                                    )
+                                    zf.writestr(zip_path, file_bytes)
+                                    doc_file_list.append(zip_path)
+                                    file_added = True
+                                    logger.info(
+                                        f"  ✅ {doc_name} → {zip_path} ({len(file_bytes)} bytes, document download)"
+                                    )
+
+                            if not file_added and data_source_type in {
+                                "upload_file",
+                                "file_upload",
+                            }:
+                                upload_file_id = data_source_info.get(
+                                    "upload_file_id"
+                                ) or data_source_info.get("upload_file", {}).get("id")
                                 if upload_file_id:
-                                    file_bytes, mime = client.download_upload_file(upload_file_id)
+                                    file_bytes, mime = client.download_upload_file(
+                                        upload_file_id
+                                    )
                                     if file_bytes:
-                                        ext = _ext_from_mime(mime, doc_name)
-                                        safe_doc = _safe_name(doc_name)
-                                        # 确保 ZIP 内文件名不冲突
-                                        zip_path = f"{safe_doc}{ext}"
+                                        # 确保 ZIP 内文件名不重复追加扩展名
+                                        zip_path = _build_zip_entry_name(
+                                            doc_name, mime or ""
+                                        )
                                         zf.writestr(zip_path, file_bytes)
                                         doc_file_list.append(zip_path)
                                         file_added = True
-                                        logger.info(f"  ✅ {doc_name} → {zip_path} ({len(file_bytes)} bytes)")
-
-                            # ── 降级：将分段内容导出为 TXT ──
-                            if not file_added and include_segments:
-                                segments = client.get_document_segments(dataset_id, doc_id, limit=200)
-                                if segments:
-                                    lines = []
-                                    for seg in segments:
-                                        content = seg.get("content", "")
-                                        if content:
-                                            lines.append(content)
-                                    if lines:
-                                        txt_content = "\n\n---\n\n".join(lines)
-                                        safe_doc = _safe_name(doc_name)
-                                        zip_path = f"{safe_doc}.txt"
-                                        zf.writestr(zip_path, txt_content.encode("utf-8"))
-                                        doc_file_list.append(zip_path)
-                                        file_added = True
-                                        logger.info(f"  📝 {doc_name} → {zip_path} (segments fallback)")
+                                        logger.info(
+                                            f"  ✅ {doc_name} → {zip_path} ({len(file_bytes)} bytes, upload file fallback)"
+                                        )
 
                             if not file_added:
-                                logger.warning(f"  ⚠️ {doc_name} 无法获取文件内容，已跳过")
+                                logger.warning(
+                                    f"  ⚠️ {doc_name} 无法获取文件内容，已跳过 (data_source_type={data_source_type or 'unknown'})"
+                                )
 
                     zip_bytes = zip_buf.getvalue()
                     zip_filename = f"{safe_ds_name}-documents.zip"
@@ -181,7 +221,7 @@ class ExportDatasetsTool(Tool):
                             meta={
                                 "mime_type": "application/zip",
                                 "filename": zip_filename,
-                            }
+                            },
                         )
                         total_file_count += len(doc_file_list)
 
@@ -189,12 +229,39 @@ class ExportDatasetsTool(Tool):
                         file_list_lines.append(f"📂 {dataset_name} → {zip_filename}")
                         for f in doc_file_list:
                             file_list_lines.append(f"   └─ {f}")
+                        dataset_results.append(
+                            {
+                                "dataset_id": dataset_id,
+                                "dataset_name": dataset_name,
+                                "status": "exported",
+                                "exported_file_count": len(doc_file_list),
+                                "zip_filename": zip_filename,
+                            }
+                        )
                     else:
-                        file_list_lines.append(f"📂 {dataset_name}（所有文档均无法获取文件，已跳过）")
+                        file_list_lines.append(
+                            f"📂 {dataset_name}（所有文档均无法获取文件，已跳过）"
+                        )
+                        dataset_results.append(
+                            {
+                                "dataset_id": dataset_id,
+                                "dataset_name": dataset_name,
+                                "status": "no_exportable_files",
+                                "exported_file_count": 0,
+                            }
+                        )
 
                 except Exception as e:
                     logger.error(f"[{dataset_name}] 导出失败: {str(e)}")
                     failed_datasets.append(f"{dataset_name}: {str(e)}")
+                    dataset_results.append(
+                        {
+                            "dataset_id": dataset_id,
+                            "dataset_name": dataset_name,
+                            "status": "failed",
+                            "exported_file_count": 0,
+                        }
+                    )
 
             # ── 3. 返回汇总文本 ──────────────────────────────────────────────
             summary = f"✅ 知识库文件导出完成\n\n"
@@ -213,12 +280,13 @@ class ExportDatasetsTool(Tool):
             yield self.create_text_message(summary)
 
             # 同时返回 JSON 结构化清单
-            yield self.create_json_message({
-                "total_datasets": len(selected),
-                "total_files": total_file_count,
-                "failed_datasets": failed_datasets,
-                "file_list": file_list_lines,
-            })
+            yield self.create_json_message(
+                {
+                    "total_datasets": len(selected),
+                    "total_files": total_file_count,
+                    "datasets": dataset_results,
+                }
+            )
 
         except Exception as e:
             error_msg = f"Export Datasets failed: {str(e)}"

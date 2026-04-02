@@ -6,6 +6,7 @@ import base64
 import json
 import logging
 from datetime import datetime
+from urllib.parse import urljoin, urlparse
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -16,42 +17,54 @@ class DifyClient:
     """
     Dify API Client - 封装所有与 Dify Console API 的交互
     """
-    
+
     # 默认超时时间（秒）
     DEFAULT_TIMEOUT = 60
-    
-    def __init__(self, base_url: str, email: str, password: str, timeout: int = None):
+
+    def __init__(
+        self, base_url: str, email: str, password: str, timeout: int | None = None
+    ):
         self.base_url = base_url.rstrip("/")
         self.email = email
         self.password = password
         self.timeout = timeout or self.DEFAULT_TIMEOUT
         self.session = requests.Session()
-        self.access_token = None
-        self.csrf_token = None
-        
+        self.access_token: str | None = None
+        self.csrf_token: str | None = None
+
         # 登录并初始化 session
         self._login()
 
     def _login(self):
         """登录 Dify 并获取 Access Token 和 CSRF Token"""
         try:
-            password_base64 = base64.b64encode(self.password.encode("utf-8")).decode("utf-8")
+            password_base64 = base64.b64encode(self.password.encode("utf-8")).decode(
+                "utf-8"
+            )
             login_url = f"{self.base_url}/console/api/login"
-            
+
             logger.info(f"正在登录 Dify: {login_url}")
             login_response = self.session.post(
                 login_url,
-                json={"email": self.email, "password": password_base64, "remember_me": True},
+                json={
+                    "email": self.email,
+                    "password": password_base64,
+                    "remember_me": True,
+                },
                 headers={"Content-Type": "application/json"},
                 timeout=self.timeout,
             )
 
             if login_response.status_code != 200:
-                raise Exception(f"Login failed: {login_response.status_code} - {login_response.text}")
+                raise Exception(
+                    f"Login failed: {login_response.status_code} - {login_response.text}"
+                )
 
             login_data = login_response.json()
             if login_data.get("result") != "success":
-                raise Exception(f"Login failed: {login_data.get('result', 'Unknown error')}")
+                raise Exception(
+                    f"Login failed: {login_data.get('result', 'Unknown error')}"
+                )
 
             # 提取 Access Token
             self.access_token = self._extract_access_token(login_data)
@@ -59,34 +72,38 @@ class DifyClient:
                 raise Exception("Failed to retrieve access token")
 
             # 提取 CSRF Token
-            self.csrf_token = self.session.cookies.get("__Host-csrf_token") or self.session.cookies.get("csrf_token")
-            
+            self.csrf_token = self.session.cookies.get(
+                "__Host-csrf_token"
+            ) or self.session.cookies.get("csrf_token")
+
             # 设置公共 Headers
-            self.session.headers.update({
-                "Authorization": f"Bearer {self.access_token}",
-                "Content-Type": "application/json",
-            })
+            self.session.headers.update(
+                {
+                    "Authorization": f"Bearer {self.access_token}",
+                    "Content-Type": "application/json",
+                }
+            )
             if self.csrf_token:
                 self.session.headers["X-CSRF-Token"] = self.csrf_token
                 logger.info("CSRF Token configured")
-            
+
             logger.info("登录成功")
 
         except Exception as e:
             logger.error(f"Login error: {str(e)}")
             raise
 
-    def _extract_access_token(self, login_data: dict) -> str:
+    def _extract_access_token(self, login_data: dict) -> str | None:
         """从响应或 Cookie 中提取 Access Token"""
         # 1. Check data["data"]["access_token"]
         token_data = login_data.get("data", {})
         if isinstance(token_data, dict) and token_data.get("access_token"):
             return token_data.get("access_token")
-        
+
         # 2. Check data["access_token"]
         if login_data.get("access_token"):
             return login_data.get("access_token")
-        
+
         # 3. Check cookies
         cookie_names = ["__Host-access_token", "access_token", "console_token"]
         for name in cookie_names:
@@ -95,16 +112,18 @@ class DifyClient:
                 return token
         return None
 
-    def get_app_info(self, app_id: str) -> dict:
+    def get_app_info(self, app_id: str) -> dict | None:
         """获取应用基本信息"""
-        response = self.session.get(f"{self.base_url}/console/api/apps/{app_id}", timeout=self.timeout)
+        response = self.session.get(
+            f"{self.base_url}/console/api/apps/{app_id}", timeout=self.timeout
+        )
         if response.status_code == 200:
             return response.json()
         return None
 
     def get_all_apps(self, limit: int = 100, mode: str = "all") -> list:
         """获取所有应用列表
-        
+
         Args:
             limit: 每页获取的应用数量
             mode: 应用类型过滤，可选值: all, workflow, advanced-chat, chat, agent-chat, completion
@@ -112,47 +131,53 @@ class DifyClient:
         all_apps = []
         page = 1
         while True:
-            params = {"page": page, "limit": limit}
+            params: dict[str, int | str] = {"page": page, "limit": limit}
             # 如果指定了 mode 且不是 all，则添加 mode 参数进行服务端过滤
             if mode and mode != "all":
                 params["mode"] = mode
-            
+
             response = self.session.get(
-                f"{self.base_url}/console/api/apps",
-                params=params,
-                timeout=self.timeout
+                f"{self.base_url}/console/api/apps", params=params, timeout=self.timeout
             )
             if response.status_code != 200:
-                logger.error(f"Failed to fetch apps page {page}: {response.status_code}")
+                logger.error(
+                    f"Failed to fetch apps page {page}: {response.status_code}"
+                )
                 break
-                
+
             data = response.json()
             items = data.get("data", [])
             if not items:
                 break
-                
+
             all_apps.extend(items)
             if not data.get("has_more", False):
                 break
             page += 1
-        
+
         logger.info(f"Total apps fetched: {len(all_apps)} (mode filter: {mode})")
         return all_apps
 
-    def get_versions_to_export(self, app_id: str, app_name: str, version_type: str = "draft") -> list:
+    def get_versions_to_export(
+        self, app_id: str, app_name: str, version_type: str = "draft"
+    ) -> list:
         """获取需要导出的版本列表信息"""
         versions = []
-        target_types = ["draft", "published"] if version_type == "all" else [version_type]
+        target_types = (
+            ["draft", "published"] if version_type == "all" else [version_type]
+        )
 
         for v_type in target_types:
             if v_type == "draft":
-                versions.append({"id": None, "version": "draft", "display_name": "draft"})
-            
+                versions.append(
+                    {"id": None, "version": "draft", "display_name": "draft"}
+                )
+
             elif v_type == "published":
                 # 获取已发布版本列表
                 pub_versions = self._get_published_versions(app_id, app_name)
                 versions.extend(pub_versions)
-        
+
         return versions
 
     def _get_published_versions(self, app_id: str, app_name: str) -> list:
@@ -161,19 +186,21 @@ class DifyClient:
         response = self.session.get(
             f"{self.base_url}/console/api/apps/{app_id}/workflows",
             params={"page": 1, "limit": 100},
-            timeout=self.timeout
+            timeout=self.timeout,
         )
 
         if response.status_code == 200:
             items = response.json().get("items", [])
             published_items = [v for v in items if v.get("version") != "draft"]
-            
+
             for item in published_items:
                 versions.append(self._parse_version_info(item))
             logger.info(f"[{app_name}] Found {len(versions)} published versions")
 
         elif response.status_code == 404:
-            logger.info(f"[{app_name}] Workflows API 404, attempting fallback to current version")
+            logger.info(
+                f"[{app_name}] Workflows API 404, attempting fallback to current version"
+            )
             # 降级处理：尝试从 App Info 获取当前 workflow_id
             app_info = self.get_app_info(app_id)
             if app_info:
@@ -182,17 +209,23 @@ class DifyClient:
                     wf_id = app_info["workflow"].get("id")
                 elif "workflow_id" in app_info:
                     wf_id = app_info.get("workflow_id")
-                
+
                 if wf_id:
-                    logger.info(f"[{app_name}] Found current published workflow ID: {wf_id}")
-                    versions.append({
-                        "id": wf_id,
-                        "version": "published",
-                        "display_name": "published",
-                        "marked_name": "current"
-                    })
+                    logger.info(
+                        f"[{app_name}] Found current published workflow ID: {wf_id}"
+                    )
+                    versions.append(
+                        {
+                            "id": wf_id,
+                            "version": "published",
+                            "display_name": "published",
+                            "marked_name": "current",
+                        }
+                    )
         else:
-            logger.warning(f"[{app_name}] Failed to get workflows: {response.status_code}")
+            logger.warning(
+                f"[{app_name}] Failed to get workflows: {response.status_code}"
+            )
 
         return versions
 
@@ -209,81 +242,87 @@ class DifyClient:
                     if isinstance(created_at, int):
                         dt = datetime.fromtimestamp(created_at)
                     else:
-                        dt = datetime.fromisoformat(str(created_at).replace('Z', '+00:00'))
+                        dt = datetime.fromisoformat(
+                            str(created_at).replace("Z", "+00:00")
+                        )
                     display_name = f"未命名-{dt.strftime('%Y%m%d%H%M')}"
                 except:
                     display_name = f"未命名-{wf_version}"
             else:
                 display_name = f"未命名-{wf_version}"
-        
+
         return {
             "id": item.get("id"),
             "version": wf_version,
             "display_name": display_name,
-            "marked_name": marked_name
+            "marked_name": marked_name,
         }
 
-    def export_dsl(self, app_id: str, workflow_id: str = None) -> str:
+    def export_dsl(self, app_id: str, workflow_id: str | None = None) -> str | None:
         """导出 DSL"""
         params = {"include_secret": "false"}
         if workflow_id:
             params["workflow_id"] = workflow_id
-        
+
         response = self.session.get(
             f"{self.base_url}/console/api/apps/{app_id}/export",
             params=params,
-            timeout=self.timeout
+            timeout=self.timeout,
         )
-        
+
         if response.status_code == 200:
             return response.json().get("data", "")
         else:
-            logger.warning(f"Export failed for app {app_id} (wf: {workflow_id}): {response.status_code}")
+            logger.warning(
+                f"Export failed for app {app_id} (wf: {workflow_id}): {response.status_code}"
+            )
             return None
 
     def get_all_annotations(self, app_id: str, limit: int = 100) -> list:
         """获取指定应用的所有标注
-        
+
         Args:
             app_id: 应用 ID
             limit: 每页获取的标注数量
-            
+
         Returns:
             标注列表，每个标注包含 question 和 answer 字段
         """
         all_annotations = []
         page = 1
-        
+
         while True:
             response = self.session.get(
                 f"{self.base_url}/console/api/apps/{app_id}/annotations",
                 params={"page": page, "limit": limit},
-                timeout=self.timeout
+                timeout=self.timeout,
             )
-            
+
             if response.status_code != 200:
-                logger.warning(f"Failed to fetch annotations for app {app_id}, page {page}: {response.status_code}")
+                logger.warning(
+                    f"Failed to fetch annotations for app {app_id}, page {page}: {response.status_code}"
+                )
                 break
-            
+
             data = response.json()
             items = data.get("data", [])
-            
+
             if not items:
                 break
-            
+
             all_annotations.extend(items)
-            
+
             # 检查是否还有更多数据
             if not data.get("has_more", False):
                 break
-            
+
             page += 1
-        
+
         return all_annotations
 
     def get_all_datasets(self, limit: int = 100) -> list:
         """获取所有知识库列表
-        
+
         Returns:
             知识库列表，每条包含 id, name, description 等字段
         """
@@ -293,32 +332,34 @@ class DifyClient:
             response = self.session.get(
                 f"{self.base_url}/console/api/datasets",
                 params={"page": page, "limit": limit},
-                timeout=self.timeout
+                timeout=self.timeout,
             )
             if response.status_code != 200:
-                logger.error(f"Failed to fetch datasets page {page}: {response.status_code}")
+                logger.error(
+                    f"Failed to fetch datasets page {page}: {response.status_code}"
+                )
                 break
-            
+
             data = response.json()
             items = data.get("data", [])
             if not items:
                 break
-            
+
             all_datasets.extend(items)
             if not data.get("has_more", False):
                 break
             page += 1
-        
+
         logger.info(f"Total datasets fetched: {len(all_datasets)}")
         return all_datasets
 
     def get_dataset_documents(self, dataset_id: str, limit: int = 100) -> list:
         """获取指定知识库的所有文档
-        
+
         Args:
             dataset_id: 知识库 ID
             limit: 每页获取的文档数量
-            
+
         Returns:
             文档列表
         """
@@ -328,60 +369,135 @@ class DifyClient:
             response = self.session.get(
                 f"{self.base_url}/console/api/datasets/{dataset_id}/documents",
                 params={"page": page, "limit": limit},
-                timeout=self.timeout
+                timeout=self.timeout,
             )
             if response.status_code != 200:
-                logger.warning(f"Failed to fetch documents for dataset {dataset_id}, page {page}: {response.status_code}")
+                logger.warning(
+                    f"Failed to fetch documents for dataset {dataset_id}, page {page}: {response.status_code}"
+                )
                 break
-            
+
             data = response.json()
             items = data.get("data", [])
             if not items:
                 break
-            
+
             all_documents.extend(items)
             if not data.get("has_more", False):
                 break
             page += 1
-        
+
         return all_documents
 
-    def get_document_segments(self, dataset_id: str, document_id: str, limit: int = 100) -> list:
+    def get_document_segments(
+        self, dataset_id: str, document_id: str, limit: int = 100
+    ) -> list:
         """获取指定文档的所有分段
-        
+
         Args:
             dataset_id: 知识库 ID
             document_id: 文档 ID
             limit: 每页获取的分段数量
-            
+
         Returns:
             分段列表
         """
         all_segments = []
         page = 1
+        page_limit = min(limit, 100)
         while True:
             response = self.session.get(
                 f"{self.base_url}/console/api/datasets/{dataset_id}/documents/{document_id}/segments",
-                params={"page": page, "limit": limit},
-                timeout=self.timeout
+                params={"page": page, "limit": page_limit},
+                timeout=self.timeout,
             )
             if response.status_code != 200:
-                logger.warning(f"Failed to fetch segments for document {document_id}: {response.status_code}")
+                logger.warning(
+                    f"Failed to fetch segments for document {document_id}: {response.status_code}"
+                )
                 break
-            
+
             data = response.json()
             items = data.get("data", [])
             if not items:
                 break
-            
+
             all_segments.extend(items)
-            if not data.get("has_more", False):
+            total_pages = data.get("total_pages")
+            has_more = data.get("has_more")
+            if isinstance(total_pages, int):
+                if page >= total_pages:
+                    break
+            elif has_more is False:
                 break
             page += 1
-        
+
         return all_segments
 
-    def download_upload_file(self, upload_file_id: str) -> tuple[bytes, str]:
+    def get_document_download_url(
+        self, dataset_id: str, document_id: str
+    ) -> str | None:
+        """获取文档级下载链接，优先使用 Dify 新版 document download 接口。"""
+        response = self.session.get(
+            f"{self.base_url}/console/api/datasets/{dataset_id}/documents/{document_id}/download",
+            timeout=self.timeout,
+        )
+        if response.status_code != 200:
+            logger.warning(
+                f"Failed to fetch download url for document {document_id}: {response.status_code}"
+            )
+            return None
+
+        try:
+            payload = response.json()
+        except ValueError:
+            logger.warning(
+                f"Document download url response is not JSON for document {document_id}"
+            )
+            return None
+
+        url = payload.get("url")
+        if isinstance(url, str) and url:
+            return (
+                urljoin(f"{self.base_url}/", url.lstrip("/"))
+                if url.startswith("/")
+                else url
+            )
+
+        logger.warning(f"Document download url missing for document {document_id}")
+        return None
+
+    def download_document_file(
+        self, dataset_id: str, document_id: str
+    ) -> tuple[bytes | None, str | None]:
+        """按 document 下载原始文件，兼容新版 Dify 控制台接口。"""
+        download_url = self.get_document_download_url(dataset_id, document_id)
+        if not download_url:
+            return None, None
+
+        parsed_download_url = urlparse(download_url)
+        parsed_base_url = urlparse(self.base_url)
+        same_host = parsed_download_url.netloc in {"", parsed_base_url.netloc}
+
+        if same_host:
+            response = self.session.get(download_url, timeout=self.timeout)
+        else:
+            response = requests.get(download_url, timeout=self.timeout)
+
+        if response.status_code == 200:
+            content_type = response.headers.get(
+                "Content-Type", "application/octet-stream"
+            )
+            return response.content, content_type
+
+        logger.warning(
+            f"Cannot download document {document_id} from signed url: {response.status_code}"
+        )
+        return None, None
+
+    def download_upload_file(
+        self, upload_file_id: str
+    ) -> tuple[bytes | None, str | None]:
         """下载原始上传文件内容
 
         Args:
@@ -394,14 +510,18 @@ class DifyClient:
         url = f"{self.base_url}/console/api/files/{upload_file_id}/file-preview"
         response = self.session.get(url, timeout=self.timeout)
         if response.status_code == 200:
-            content_type = response.headers.get("Content-Type", "application/octet-stream")
+            content_type = response.headers.get(
+                "Content-Type", "application/octet-stream"
+            )
             return response.content, content_type
 
         # 降级：尝试另一个端点路径
         url2 = f"{self.base_url}/files/{upload_file_id}/file-preview"
         response2 = self.session.get(url2, timeout=self.timeout)
         if response2.status_code == 200:
-            content_type = response2.headers.get("Content-Type", "application/octet-stream")
+            content_type = response2.headers.get(
+                "Content-Type", "application/octet-stream"
+            )
             return response2.content, content_type
 
         logger.warning(f"Cannot download file {upload_file_id}: {response.status_code}")
@@ -410,8 +530,18 @@ class DifyClient:
     @staticmethod
     def generate_filename(app_name: str, version_display_name: str) -> str:
         """生成安全的文件名"""
-        safe_app = "".join(c for c in app_name if c.isalnum() or c in (' ', '-', '_')).strip().replace(' ', '_')
-        safe_ver = "".join(c for c in version_display_name if c.isalnum() or c in (' ', '-', '_')).strip().replace(' ', '_')
+        safe_app = (
+            "".join(c for c in app_name if c.isalnum() or c in (" ", "-", "_"))
+            .strip()
+            .replace(" ", "_")
+        )
+        safe_ver = (
+            "".join(
+                c for c in version_display_name if c.isalnum() or c in (" ", "-", "_")
+            )
+            .strip()
+            .replace(" ", "_")
+        )
         return f"{safe_app}-{safe_ver}.yml"
 
 

@@ -108,14 +108,13 @@
 | 参数 | 类型 | 必填 | 默认值 | 说明 |
 |------|------|------|--------|------|
 | `dataset_ids` | string | ❌ | _（全部）_ | 逗号分隔的知识库 ID，留空则导出**所有**知识库 |
-| `include_segments` | boolean | ❌ | `false` | 启用后，对无法下载原始文件的文档，使用已索引的分段内容降级导出为 `.txt` |
 
 **执行流程：**
 
 1. 获取所有知识库列表，根据 `dataset_ids` 过滤（为空则取全部）
 2. 对每个知识库，获取其文档列表并下载原始上传文件
 3. 每个知识库单独打包为一个 ZIP 文件：`{知识库名}-documents.zip`
-4. 流式返回各 ZIP 文件 blob，并附带结构化文件清单
+4. 流式返回各 ZIP 文件 blob，并附带按知识库汇总的结构化结果
 
 **返回内容：**
 - 每个知识库一个 ZIP 文件 blob（流式）
@@ -126,16 +125,23 @@
 {
   "total_datasets": 3,
   "total_files": 12,
-  "failed_datasets": [],
-  "file_list": [
-    "📂 我的知识库 → 我的知识库-documents.zip",
-    "   └─ 文档1.pdf",
-    "   └─ 文档2.docx"
+  "datasets": [
+    {
+      "dataset_id": "dataset-uuid-1",
+      "dataset_name": "我的知识库",
+      "status": "exported",
+      "exported_file_count": 2,
+      "zip_filename": "我的知识库-documents.zip"
+    },
+    {
+      "dataset_id": "dataset-uuid-2",
+      "dataset_name": "空知识库",
+      "status": "no_documents",
+      "exported_file_count": 0
+    }
   ]
 }
 ```
-
-> 💡 **`include_segments` 降级说明**：若文档是通过 API 文本方式导入（而非文件上传），启用此选项后，工具会将该文档的索引分段内容导出为 `.txt` 文件并放入 ZIP。
 
 ---
 
@@ -194,7 +200,8 @@
 | `GET /console/api/apps/{id}/annotations` | 获取应用标注 |
 | `GET /console/api/datasets` | 获取知识库列表 |
 | `GET /console/api/datasets/{id}/documents` | 获取知识库文档列表 |
-| `GET /console/api/files/{file_id}/file-preview` | 下载原始文件 |
+| `GET /console/api/datasets/{id}/documents/{document_id}/download` | 获取文档下载地址 |
+| `GET /console/api/files/{file_id}/file-preview` | 原始文件下载的旧版回退接口 |
 
 ---
 
@@ -205,7 +212,7 @@
 | 登录失败 | 检查邮箱密码是否正确，确认 Dify 实例 URL 可访问 |
 | 请求超时 | 检查网络连接，或指定 `dataset_ids` 分批导出 |
 | 版本列表为空 | 部分应用类型不支持版本管理，属于正常现象 |
-| 知识库文件无法下载 | 启用 `include_segments` 选项以降级为分段文本导出；原始文件下载要求文档通过文件上传方式导入 |
+| 知识库文件无法下载 | 原始文件下载要求文档具备可导出的源文件；部分非文件型文档会被跳过 |
 
 ## 🔒 隐私政策
 

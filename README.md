@@ -102,14 +102,13 @@ Export original uploaded files from one or more knowledge bases as ZIP archives.
 | Parameter | Type | Required | Default | Description |
 |-----------|------|----------|---------|-------------|
 | `dataset_ids` | string | ❌ | _(all)_ | Comma-separated dataset IDs. Leave blank to export **all** datasets |
-| `include_segments` | boolean | ❌ | `false` | Fallback to text-segment export when original file cannot be downloaded |
 
 **Behavior:**
 
 1. Fetches all knowledge bases (filtered by `dataset_ids` if provided)
 2. For each dataset, downloads every document's original uploaded file
 3. Packages each dataset's files into a separate ZIP: `{DatasetName}-documents.zip`
-4. Returns all ZIPs as file blobs plus a structured file list
+4. Returns all ZIPs as file blobs plus a per-dataset structured manifest
 
 **Returns:**
 - One ZIP blob per dataset (streamed)
@@ -120,16 +119,23 @@ Export original uploaded files from one or more knowledge bases as ZIP archives.
 {
   "total_datasets": 3,
   "total_files": 12,
-  "failed_datasets": [],
-  "file_list": [
-    "📂 My Knowledge Base → my_knowledge_base-documents.zip",
-    "   └─ document1.pdf",
-    "   └─ document2.docx"
+  "datasets": [
+    {
+      "dataset_id": "dataset-uuid-1",
+      "dataset_name": "My Knowledge Base",
+      "status": "exported",
+      "exported_file_count": 2,
+      "zip_filename": "my_knowledge_base-documents.zip"
+    },
+    {
+      "dataset_id": "dataset-uuid-2",
+      "dataset_name": "Empty Knowledge Base",
+      "status": "no_documents",
+      "exported_file_count": 0
+    }
   ]
 }
 ```
-
-> 💡 **`include_segments` fallback**: If a document was added via API text import rather than file upload, enabling this option exports its indexed segments as a `.txt` file inside the ZIP.
 
 ---
 
@@ -188,7 +194,8 @@ Export current version as archive before publishing new version.
 | `GET /console/api/apps/{id}/annotations` | Get annotations |
 | `GET /console/api/datasets` | List knowledge bases |
 | `GET /console/api/datasets/{id}/documents` | List documents in dataset |
-| `GET /console/api/files/{file_id}/file-preview` | Download original file |
+| `GET /console/api/datasets/{id}/documents/{document_id}/download` | Get document download URL |
+| `GET /console/api/files/{file_id}/file-preview` | Legacy fallback for original file download |
 
 ---
 
@@ -199,7 +206,7 @@ Export current version as archive before publishing new version.
 | Login Failed | Check email/password, verify URL is accessible |
 | Request Timeout | Check network, export in batches |
 | Empty Versions | Some app types don't support version management |
-| Dataset files not downloading | Enable `include_segments` to fall back to text export; file download requires the document to have been added via file upload |
+| Dataset files not downloading | File download requires the document to have an exportable original file. Some non-file-backed documents may be skipped. |
 
 ## 🔒 Privacy Policy
 
