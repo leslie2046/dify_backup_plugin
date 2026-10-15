@@ -185,3 +185,7 @@ GUIDE.md
 .env.example
 
 .ruff_cache/
+
+# Development-only checks
+tests/
+.pytest_cache/

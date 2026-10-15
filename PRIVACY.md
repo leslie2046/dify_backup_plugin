@@ -1,6 +1,6 @@
 # Privacy Policy / 隐私政策
 
-**Last Updated / 最后更新**: 2026-01-07
+**Last Updated / 最后更新**: 2026-10-15
 
 ## English
 
@@ -32,9 +32,9 @@ The Plugin collects and processes the following types of data:
 
 ### Data Sharing
 
-- **No Third-Party Sharing**: This plugin does not share any data with third parties.
-- **Direct Communication Only**: All data is transmitted directly between the Dify platform and your specified Dify instance.
-- **No Analytics**: This plugin does not implement any analytics or tracking mechanisms.
+- **Optional Langfuse integration**: When monitoring tools are used, the plugin sends project names derived from the Dify instance URL hash and App UUID to your configured Langfuse instance. Organization keys authenticate only with Langfuse; project keys are sent to your Dify instance for persistent tracing configuration. Dify then sends application traces to Langfuse according to that configuration.
+- **Direct Communication Only**: API calls go to your configured Dify and, when enabled, Langfuse endpoints.
+- **No Plugin Analytics**: The plugin does not collect its own usage analytics. Monitoring tools explicitly configure application tracing.
 
 ### Data Security
 
@@ -87,9 +87,9 @@ For questions about this privacy policy, please contact:
 
 ### 数据共享
 
-- **不与第三方共享**：本插件不会与任何第三方共享数据。
-- **仅直接通信**：所有数据仅在 Dify 平台与您指定的 Dify 实例之间直接传输。
-- **无分析追踪**：本插件不实现任何分析或跟踪机制。
+- **可选 Langfuse 集成**：使用监控工具时，插件向指定 Langfuse 发送由 Dify 实例地址哈希和 App UUID 组成的项目名称。组织密钥仅用于 Langfuse 认证；项目密钥会写入指定 Dify 实例并由其持久保存。启用后 Dify 会按配置向 Langfuse 发送应用 trace。
+- **仅直接通信**：API 请求发送至您配置的 Dify 地址及启用时的 Langfuse 地址。
+- **无插件使用分析**：插件不收集自身使用统计；监控工具用于显式配置应用追踪。
 
 ### 数据安全
 
@@ -109,3 +109,7 @@ For questions about this privacy policy, please contact:
 如对本隐私政策有任何疑问，请联系：
 - **作者**: [leslie2046](https://github.com/leslie2046)
 - **仓库**: [dify_backup_plugin](https://github.com/leslie2046/dify_backup_plugin)
+
+Provider credentials are stored by the Dify platform; this plugin does not maintain a separate credential store. Created Langfuse projects/keys and Dify tracing settings persist until removed by the operator.
+
+提供商凭证由 Dify 平台保存，插件不另建凭据存储。创建的 Langfuse 项目、密钥及 Dify 监控配置会持续存在，需由管理者自行移除。
