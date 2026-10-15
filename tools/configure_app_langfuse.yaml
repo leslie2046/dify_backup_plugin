@@ -1,0 +1,44 @@
+identity:
+  name: configure_app_langfuse
+  author: leslie2046
+  label:
+    en_US: Configure App Langfuse
+    zh_Hans: 配置应用监控
+description:
+  human:
+    en_US: Save existing project keys from provider credentials, enable tracing and
+      verify. 使用已有 Project Key 保存配置并启用监控。
+    zh_Hans: Save existing project keys from provider credentials, enable tracing
+      and verify. 使用已有 Project Key 保存配置并启用监控。
+  llm: Save existing project keys from provider credentials, enable tracing and verify.
+    使用已有 Project Key 保存配置并启用监控。
+parameters:
+- name: app_id
+  type: string
+  required: true
+  label:
+    en_US: App ID
+    zh_Hans: 应用 ID
+  human_description:
+    en_US: Dify application UUID.
+    zh_Hans: Dify application UUID.
+  llm_description: Dify application UUID.
+  form: form
+- name: overwrite
+  type: boolean
+  required: false
+  label:
+    en_US: Overwrite
+    zh_Hans: 覆盖已有配置
+  human_description:
+    en_US: Explicitly replace an existing Langfuse config or switch the active tracing
+      provider.
+    zh_Hans: Explicitly replace an existing Langfuse config or switch the active tracing
+      provider.
+  llm_description: Explicitly replace an existing Langfuse config or switch the active
+    tracing provider.
+  form: form
+  default: false
+extra:
+  python:
+    source: tools/configure_app_langfuse.py

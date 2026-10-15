@@ -38,6 +38,57 @@ credentials_for_provider:
       en_US: Your Dify account password
       zh_Hans: 你的 Dify 账号密码
 
+  langfuse_host:
+    type: text-input
+    required: false
+    label:
+      en_US: Langfuse Base URL / Langfuse 地址
+      zh_Hans: Langfuse Base URL / Langfuse 地址
+    help:
+      en_US: Optional; needed only for Langfuse tools. Organization keys provision projects;
+        project keys configure an existing project.
+      zh_Hans: 可选，仅监控工具需要；组织密钥用于创建项目，项目密钥用于接入已有项目。
+  langfuse_org_public_key:
+    type: secret-input
+    required: false
+    label:
+      en_US: Langfuse Organization Public Key / 组织公钥
+      zh_Hans: Langfuse Organization Public Key / 组织公钥
+    help:
+      en_US: Optional; needed only for Langfuse tools. Organization keys provision projects;
+        project keys configure an existing project.
+      zh_Hans: 可选，仅监控工具需要；组织密钥用于创建项目，项目密钥用于接入已有项目。
+  langfuse_org_secret_key:
+    type: secret-input
+    required: false
+    label:
+      en_US: Langfuse Organization Secret Key / 组织密钥
+      zh_Hans: Langfuse Organization Secret Key / 组织密钥
+    help:
+      en_US: Optional; needed only for Langfuse tools. Organization keys provision projects;
+        project keys configure an existing project.
+      zh_Hans: 可选，仅监控工具需要；组织密钥用于创建项目，项目密钥用于接入已有项目。
+  langfuse_project_public_key:
+    type: secret-input
+    required: false
+    label:
+      en_US: Existing Project Public Key / 已有项目公钥
+      zh_Hans: Existing Project Public Key / 已有项目公钥
+    help:
+      en_US: Optional; needed only for Langfuse tools. Organization keys provision projects;
+        project keys configure an existing project.
+      zh_Hans: 可选，仅监控工具需要；组织密钥用于创建项目，项目密钥用于接入已有项目。
+  langfuse_project_secret_key:
+    type: secret-input
+    required: false
+    label:
+      en_US: Existing Project Secret Key / 已有项目密钥
+      zh_Hans: Existing Project Secret Key / 已有项目密钥
+    help:
+      en_US: Optional; needed only for Langfuse tools. Organization keys provision projects;
+        project keys configure an existing project.
+      zh_Hans: 可选，仅监控工具需要；组织密钥用于创建项目，项目密钥用于接入已有项目。
+
 extra:
   python:
     source: provider/dify_backup.py
@@ -60,3 +111,8 @@ tools:
   - tools/export_app.yaml
   - tools/export_all_annotations.yaml
   - tools/export_datasets.yaml
+  - tools/list_apps.yaml
+  - tools/get_app_monitoring.yaml
+  - tools/configure_app_langfuse.yaml
+  - tools/provision_app_langfuse.yaml
+  - tools/sync_apps_langfuse.yaml

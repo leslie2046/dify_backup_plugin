@@ -1,0 +1,98 @@
+identity:
+  name: sync_apps_langfuse
+  author: leslie2046
+  label:
+    en_US: Sync Apps Langfuse
+    zh_Hans: 批量接入监控
+description:
+  human:
+    en_US: Reconcile new or unconfigured apps into Langfuse. Run from a scheduled
+      Dify workflow; default is read-only. 定时工作流批量接入新应用。
+    zh_Hans: Reconcile new or unconfigured apps into Langfuse. Run from a scheduled
+      Dify workflow; default is read-only. 定时工作流批量接入新应用。
+  llm: Reconcile new or unconfigured apps into Langfuse. Run from a scheduled Dify
+    workflow; default is read-only. 定时工作流批量接入新应用。
+parameters:
+- name: app_mode
+  type: select
+  required: false
+  label:
+    en_US: App mode
+    zh_Hans: 应用类型
+  human_description:
+    en_US: Filter application mode.
+    zh_Hans: Filter application mode.
+  llm_description: Filter application mode.
+  form: form
+  default: all
+  options:
+  - value: all
+    label:
+      en_US: all
+      zh_Hans: all
+  - value: workflow
+    label:
+      en_US: workflow
+      zh_Hans: workflow
+  - value: advanced-chat
+    label:
+      en_US: advanced-chat
+      zh_Hans: advanced-chat
+  - value: chat
+    label:
+      en_US: chat
+      zh_Hans: chat
+  - value: agent-chat
+    label:
+      en_US: agent-chat
+      zh_Hans: agent-chat
+  - value: completion
+    label:
+      en_US: completion
+      zh_Hans: completion
+- name: created_after
+  type: number
+  required: false
+  label:
+    en_US: Created after
+    zh_Hans: 创建时间起点
+  human_description:
+    en_US: Inclusive Unix timestamp in seconds; 0 scans all apps for retry and backfill.
+    zh_Hans: Inclusive Unix timestamp in seconds; 0 scans all apps for retry and backfill.
+  llm_description: Inclusive Unix timestamp in seconds; 0 scans all apps for retry
+    and backfill.
+  form: form
+  default: 0
+- name: dry_run
+  type: boolean
+  required: false
+  label:
+    en_US: Dry run
+    zh_Hans: 仅预览
+  human_description:
+    en_US: Read-only preview by default. Set false to create projects and keys and
+      enable tracing.
+    zh_Hans: Read-only preview by default. Set false to create projects and keys and
+      enable tracing.
+  llm_description: Read-only preview by default. Set false to create projects and
+    keys and enable tracing.
+  form: form
+  default: true
+- name: max_apps
+  type: number
+  required: false
+  label:
+    en_US: Max apps
+    zh_Hans: 单次接入上限
+  human_description:
+    en_US: Maximum candidate apps to mutate per run (1–100). Existing configured apps
+      do not count.
+    zh_Hans: Maximum candidate apps to mutate per run (1–100). Existing configured
+      apps do not count.
+  llm_description: Maximum candidate apps to mutate per run (1–100). Existing configured
+    apps do not count.
+  form: form
+  default: 10
+extra:
+  python:
+    source: tools/sync_apps_langfuse.py

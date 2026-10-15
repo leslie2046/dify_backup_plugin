@@ -1,0 +1,81 @@
+identity:
+  name: list_apps
+  author: leslie2046
+  label:
+    en_US: List Apps
+    zh_Hans: 查询应用
+description:
+  human:
+    en_US: List all accessible apps with pagination and optional creation-time and
+      monitoring filters. 查询应用，可附带监控状态。
+    zh_Hans: List all accessible apps with pagination and optional creation-time and
+      monitoring filters. 查询应用，可附带监控状态。
+  llm: List all accessible apps with pagination and optional creation-time and monitoring
+    filters. 查询应用，可附带监控状态。
+parameters:
+- name: app_mode
+  type: select
+  required: false
+  label:
+    en_US: App mode
+    zh_Hans: 应用类型
+  human_description:
+    en_US: Filter application mode.
+    zh_Hans: Filter application mode.
+  llm_description: Filter application mode.
+  form: form
+  default: all
+  options:
+  - value: all
+    label:
+      en_US: all
+      zh_Hans: all
+  - value: workflow
+    label:
+      en_US: workflow
+      zh_Hans: workflow
+  - value: advanced-chat
+    label:
+      en_US: advanced-chat
+      zh_Hans: advanced-chat
+  - value: chat
+    label:
+      en_US: chat
+      zh_Hans: chat
+  - value: agent-chat
+    label:
+      en_US: agent-chat
+      zh_Hans: agent-chat
+  - value: completion
+    label:
+      en_US: completion
+      zh_Hans: completion
+- name: created_after
+  type: number
+  required: false
+  label:
+    en_US: Created after
+    zh_Hans: 创建时间起点
+  human_description:
+    en_US: Inclusive Unix timestamp in seconds; 0 scans all apps for retry and backfill.
+    zh_Hans: Inclusive Unix timestamp in seconds; 0 scans all apps for retry and backfill.
+  llm_description: Inclusive Unix timestamp in seconds; 0 scans all apps for retry
+    and backfill.
+  form: form
+  default: 0
+- name: include_monitoring
+  type: boolean
+  required: false
+  label:
+    en_US: Include monitoring
+    zh_Hans: 包含监控
+  human_description:
+    en_US: Include sanitized Langfuse config and active tracing state for each app.
+    zh_Hans: Include sanitized Langfuse config and active tracing state for each app.
+  llm_description: Include sanitized Langfuse config and active tracing state for
+    each app.
+  form: form
+  default: false
+extra:
+  python:
+    source: tools/list_apps.py

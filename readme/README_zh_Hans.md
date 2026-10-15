@@ -1,7 +1,7 @@
 # Dify Backup Plugin
 
 **作者：** [leslie2046](https://github.com/leslie2046/dify_backup_plugin)  
-**版本：** 0.0.4  
+**版本：** 0.0.5
 **类型：** tool
 
 <p align="center">
@@ -229,3 +229,50 @@
 <p align="center">
   Made with ❤️ for Dify
 </p>
+
+## Langfuse 每日自动接入（0.0.5）
+
+| 工具 | 用途 |
+|---|---|
+| `list_apps` | 分页查询应用，按类型、创建时间过滤，可附带脱敏监控状态。 |
+| `get_app_monitoring` | 查询 tracing 开关、当前厂商和 Langfuse 配置，不输出密钥。 |
+| `configure_app_langfuse` | 使用凭证中已有 Project Key 保存配置、启用 tracing 并回读校验；覆盖配置需显式设置 `overwrite=true`。 |
+| `provision_app_langfuse` | 为单个 App 创建或复用 Project、创建 Key，内部直接写入 Dify 并启用监控。 |
+| `sync_apps_langfuse` | 批量扫描并接入未配置监控的应用，逐应用返回结果和最终摘要。 |
+
+### 前提与凭证
+
+保留现有 Dify 地址、邮箱、密码。账号应拥有当前工作空间的监控编辑权限；工具不切换工作空间，不支持仅 SSO 登录。
+
+新增可选的提供商凭证，原有备份工具不受影响：
+
+- `langfuse_host`：Langfuse 基础地址，不含 `/api/public`；插件与 Dify API 服务都必须能访问。
+- `langfuse_org_public_key` / `langfuse_org_secret_key`：组织级公钥和密钥，用于自动创建项目和项目 Key。
+- `langfuse_project_public_key` / `langfuse_project_secret_key`：已有项目密钥，仅供 `configure_app_langfuse` 使用。
+
+**版本限制：** Langfuse 官方组织管理 API 需要对应 Enterprise 套餐或自托管 Enterprise Edition；普通 Project Key 和社区自托管版不等于具备项目管理 API。没有组织 API 时，可手动创建 Project/Key，再使用配置工具完成 Dify 接入。本插件不使用私有 tRPC 或直接写数据库绕过该限制。
+
+Dify 接口已按 **1.17.1** 和上游源码核对；Langfuse 需支持 `GET /api/public/organizations/projects` 等官方接口。接口不存在或权限不足会明确报错。当前验证为模拟 API 测试，尚未在你的实例完成联调。
+
+### 推荐每日工作流
+
+1. 在提供商凭证中配置 Dify 和 Langfuse 组织密钥。
+2. 使用每日定时触发器，例如北京时间 09:00；旧版 Dify 无定时触发器时，由外部调度调用工作流。
+3. 添加 `sync_apps_langfuse`，设置 `app_mode=all`、`created_after=0`、`dry_run=true`、`max_apps=10`，先查看预览。
+4. 确认预览后将 `dry_run=false`。未配置应用会使用 `dify-<实例地址哈希>-<完整 App UUID>` 作为项目名称，创建 Key 后直接通过 Console API 写入 Dify，最后启用 tracing。
+5. 读取最后一个 JSON（`json[-1]`，`type=summary`），检查 `failed`、`remaining_candidates`、`complete` 和逐应用结果。失败应告警，仍有候选时继续执行下一批。
+
+建议全量扫描并跳过已有配置，比只查“昨天创建”的应用更容易补偿前次失败。应用很多时使用 `list_apps` → **串行迭代** `provision_app_langfuse`，避免单次工具运行过长。`created_after` 为包含边界的 Unix 秒级时间戳；如外部维护时间水位，应保留重叠窗口，仅在扫描全部成功后推进。
+
+已有 Langfuse 配置、其他正在使用的监控厂商默认跳过。已保存本插件管理的配置但开关未开启时，会恢复启用；外部配置保持原状态。
+
+### 重试、安全与恢复
+
+- 自动接入默认 `dry_run=true`，仅执行读取与权限预检；需主动设为 false 才会写入。
+- **同一工作空间和 Langfuse 组织只运行一个接入任务。** 项目查询与创建不具备跨系统原子性，并发执行仍可能创建重复项目；发现同名项目会报错，不会随意选择。
+- 项目已创建则复用；配置已保存但启用失败则恢复启用；已接入应用不会每次新建 Key。请保持 Dify 实例 URL 稳定，避免项目命名空间变化。
+- Langfuse 的 Secret Key 仅创建时返回。如果 Key 已创建但配置失败或超时，后续扫描会通过 Key 的备注识别并返回 `recovery_required`，停止继续创建 Key。先重新查询 Dify：已有配置则重试启用；没有配置则使用安全留存的密钥手动配置，或确认该 Key 未使用后在 Langfuse 撤销它，再重试。不会在结果不确定时自动删除项目或密钥。
+- 新工具不输出凭据、原始错误响应或 Authorization。凭证由 Dify 管理，项目密钥由 Dify 监控配置持久化；插件代码不另存密钥。
+- 分页失败不会伪装成空列表或成功扫描；单个应用失败不阻止其余应用处理。正式使用后还需发送一次应用请求，确认 Langfuse 实际收到 trace，回读配置不等于验证上报成功。
+
+完整接口来源和测试命令见[英文 README](../README.md#langfuse-monitoring-automation-005)。

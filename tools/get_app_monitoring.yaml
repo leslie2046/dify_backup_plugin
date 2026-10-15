@@ -1,0 +1,29 @@
+identity:
+  name: get_app_monitoring
+  author: leslie2046
+  label:
+    en_US: Get App Monitoring
+    zh_Hans: 查询应用监控
+description:
+  human:
+    en_US: Query active tracing and Langfuse configuration without returning credentials.
+      查询监控开关与脱敏配置。
+    zh_Hans: Query active tracing and Langfuse configuration without returning credentials.
+      查询监控开关与脱敏配置。
+  llm: Query active tracing and Langfuse configuration without returning credentials.
+    查询监控开关与脱敏配置。
+parameters:
+- name: app_id
+  type: string
+  required: true
+  label:
+    en_US: App ID
+    zh_Hans: 应用 ID
+  human_description:
+    en_US: Dify application UUID.
+    zh_Hans: Dify application UUID.
+  llm_description: Dify application UUID.
+  form: form
+extra:
+  python:
+    source: tools/get_app_monitoring.py

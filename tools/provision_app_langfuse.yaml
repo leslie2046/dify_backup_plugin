@@ -1,0 +1,44 @@
+identity:
+  name: provision_app_langfuse
+  author: leslie2046
+  label:
+    en_US: Provision App Langfuse
+    zh_Hans: 自动接入单个应用
+description:
+  human:
+    en_US: Create or reuse a Langfuse project, create a key and configure Dify internally.
+      Requires organization API keys. 自动创建项目与密钥并配置 Dify。
+    zh_Hans: Create or reuse a Langfuse project, create a key and configure Dify internally.
+      Requires organization API keys. 自动创建项目与密钥并配置 Dify。
+  llm: Create or reuse a Langfuse project, create a key and configure Dify internally.
+    Requires organization API keys. 自动创建项目与密钥并配置 Dify。
+parameters:
+- name: app_id
+  type: string
+  required: true
+  label:
+    en_US: App ID
+    zh_Hans: 应用 ID
+  human_description:
+    en_US: Dify application UUID.
+    zh_Hans: Dify application UUID.
+  llm_description: Dify application UUID.
+  form: form
+- name: dry_run
+  type: boolean
+  required: false
+  label:
+    en_US: Dry run
+    zh_Hans: 仅预览
+  human_description:
+    en_US: Read-only preview by default. Set false to create projects and keys and
+      enable tracing.
+    zh_Hans: Read-only preview by default. Set false to create projects and keys and
+      enable tracing.
+  llm_description: Read-only preview by default. Set false to create projects and
+    keys and enable tracing.
+  form: form
+  default: true
+extra:
+  python:
+    source: tools/provision_app_langfuse.py

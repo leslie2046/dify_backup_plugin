@@ -57,13 +57,13 @@ class DifyClient:
 
             if login_response.status_code != 200:
                 raise Exception(
-                    f"Login failed: {login_response.status_code} - {login_response.text}"
+                    f"Login failed: HTTP {login_response.status_code}"
                 )
 
             login_data = login_response.json()
             if login_data.get("result") != "success":
                 raise Exception(
-                    f"Login failed: {login_data.get('result', 'Unknown error')}"
+                    "Login failed: server did not report success"
                 )
 
             # 提取 Access Token
@@ -90,7 +90,7 @@ class DifyClient:
             logger.info("登录成功")
 
         except Exception as e:
-            logger.error(f"Login error: {str(e)}")
+            logger.error("Dify login failed (%s)", type(e).__name__)
             raise
 
     def _extract_access_token(self, login_data: dict) -> str | None:
